@@ -44,8 +44,8 @@ services:
       API_INTERNAL_URL: http://backend:8000
     depends_on:
       - backend
-    expose:
-      - "3000"
+    ports:
+      - "${APP_BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-3001}:3000"
 
   sqlite-web:
     image: ghcr.io/coleifer/sqlite-web:latest
@@ -57,7 +57,7 @@ services:
     volumes:
       - backend-data:/data:ro
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8081:8080"
 
 volumes:
   backend-data:
