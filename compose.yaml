@@ -28,6 +28,8 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+
+      MAX_MEDIA_PIXELS: ${MAX_MEDIA_PIXELS:-48000000}
     volumes:
       - backend-data:/app/data
       - backend-storage:/app/storage
