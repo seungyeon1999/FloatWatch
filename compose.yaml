@@ -4,6 +4,8 @@ services:
       context: ./backend
     restart: unless-stopped
     env_file:
+      - path: ./.env
+        required: false
       - path: ./backend/.env
         required: false
     environment:
@@ -11,23 +13,6 @@ services:
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3001}
       INFERENCE_DEVICE: ${INFERENCE_DEVICE:-cpu}
       ANALYSIS_WORKERS: ${ANALYSIS_WORKERS:-4}
-
-      APP_SECRET: ${APP_SECRET}
-
-      OAUTH_SUCCESS_REDIRECT: ${OAUTH_SUCCESS_REDIRECT}
-      OAUTH_ERROR_REDIRECT: ${OAUTH_ERROR_REDIRECT}
-
-      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
-      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
-      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
-
-      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
-      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
-      NAVER_REDIRECT_URI: ${NAVER_REDIRECT_URI}
-
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
 
       MAX_MEDIA_PIXELS: ${MAX_MEDIA_PIXELS:-48000000}
     volumes:

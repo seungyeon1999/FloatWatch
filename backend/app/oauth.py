@@ -23,35 +23,44 @@ class ProviderConfig:
     authorize_url: str
     token_url: str
     scopes: str
+    client_secret_required: bool = True
 
 
 PROVIDERS = {
     "google": ProviderConfig(
         os.getenv("GOOGLE_CLIENT_ID", ""), os.getenv("GOOGLE_CLIENT_SECRET", ""),
-        os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/oauth/google/callback"),
+        os.getenv("GOOGLE_REDIRECT_URI", ""),
         "https://accounts.google.com/o/oauth2/v2/auth", "https://oauth2.googleapis.com/token",
         "openid email profile",
     ),
     "kakao": ProviderConfig(
         os.getenv("KAKAO_CLIENT_ID", ""), os.getenv("KAKAO_CLIENT_SECRET", ""),
-        os.getenv("KAKAO_REDIRECT_URI", "http://localhost:8000/auth/oauth/kakao/callback"),
+        os.getenv("KAKAO_REDIRECT_URI", ""),
         "https://kauth.kakao.com/oauth/authorize", "https://kauth.kakao.com/oauth/token",
         "",
+        False,
     ),
     "naver": ProviderConfig(
         os.getenv("NAVER_CLIENT_ID", ""), os.getenv("NAVER_CLIENT_SECRET", ""),
-        os.getenv("NAVER_REDIRECT_URI", "http://localhost:8000/auth/oauth/naver/callback"),
+        os.getenv("NAVER_REDIRECT_URI", ""),
         "https://nid.naver.com/oauth2.0/authorize", "https://nid.naver.com/oauth2.0/token",
         "",
     ),
 }
 
 
-def authorization_url(provider: str, state: str) -> str:
+def provider_redirect_uri(provider: str, frontend_origin: str) -> str:
+    configured = PROVIDERS[provider].redirect_uri.strip()
+    if configured:
+        return configured
+    return f"{frontend_origin.rstrip('/')}/api/auth/oauth/{provider}/callback"
+
+
+def authorization_url(provider: str, state: str, redirect_uri: str) -> str:
     config = PROVIDERS[provider]
     params = {
         "response_type": "code", "client_id": config.client_id,
-        "redirect_uri": config.redirect_uri, "state": state,
+        "redirect_uri": redirect_uri, "state": state,
     }
     if config.scopes:
         params["scope"] = config.scopes
@@ -73,12 +82,14 @@ def _json_request(url: str, *, data: dict[str, str] | None = None, token: str | 
         raise ValueError("인증 서버와 통신하지 못했습니다.") from exc
 
 
-def exchange_profile(provider: str, code: str, state: str) -> OAuthProfile:
+def exchange_profile(provider: str, code: str, state: str, redirect_uri: str) -> OAuthProfile:
     config = PROVIDERS[provider]
     token_data = {
         "grant_type": "authorization_code", "client_id": config.client_id,
-        "client_secret": config.client_secret, "redirect_uri": config.redirect_uri, "code": code,
+        "redirect_uri": redirect_uri, "code": code,
     }
+    if config.client_secret:
+        token_data["client_secret"] = config.client_secret
     if provider == "naver":
         token_data["state"] = state
     token = _json_request(config.token_url, data=token_data).get("access_token")

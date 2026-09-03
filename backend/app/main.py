@@ -43,7 +43,7 @@ from .analysis_service import (
 from .coastal import COASTAL_DISTANCE_METERS, classify_coastal_location
 from .database import Base, STORAGE_DIR, SessionLocal, engine
 from .models import Analysis, AuditLog, ContentAttachment, ContentComment, ContentItem, Inquiry, InquiryAttachment, ModelArtifact, OAuthIdentity, RealtimeEvent, RealtimeSession, Session, User, VideoAsset
-from .oauth import PROVIDERS, authorization_url, exchange_profile
+from .oauth import PROVIDERS, authorization_url, exchange_profile, provider_redirect_uri
 from .schemas import AccountDelete, AnalysisBatchCreate, AnalysisCreate, CommentCreate, ContentCreate, ContentUpdate, InquiryAnswer, InquiryCreate, LoginBody, MediaLocationUpdate, PasswordChange, ProfileUpdate, RealtimeEventProtect, RealtimeSessionCreate, RealtimeSessionUpdate, RegisterBody, UserAdminUpdate
 from .security import hash_password, new_session_token, token_digest, verify_password
 from .storage_security import InsufficientStorageError, ensure_disk_capacity, ensure_within_storage, normalize_upload_name, safe_unlink, storage_path
@@ -1471,11 +1471,12 @@ def oauth_start(provider: str) -> RedirectResponse:
     if provider not in PROVIDERS:
         raise HTTPException(404, "지원하지 않는 로그인 방식입니다.")
     config = PROVIDERS[provider]
-    if not config.client_id or not config.client_secret:
+    if not config.client_id or (config.client_secret_required and not config.client_secret):
         raise HTTPException(503, f"{provider} 로그인 환경변수가 설정되지 않았습니다.")
     state = secrets.token_urlsafe(32)
-    response = RedirectResponse(authorization_url(provider, state), status_code=302)
-    response.set_cookie(OAUTH_STATE_COOKIE, state, httponly=True, samesite="lax", secure=False, max_age=600, path="/auth/oauth")
+    redirect_uri = provider_redirect_uri(provider, FRONTEND_ORIGIN)
+    response = RedirectResponse(authorization_url(provider, state, redirect_uri), status_code=302)
+    response.set_cookie(OAUTH_STATE_COOKIE, state, httponly=True, samesite="lax", secure=False, max_age=600, path="/")
     return response
 
 
@@ -1491,7 +1492,7 @@ def oauth_callback(
     def failure(message: str) -> RedirectResponse:
         query = urllib.parse.urlencode({"login": "1", "oauth_error": message})
         result = RedirectResponse(f"{FRONTEND_ORIGIN}/auth?{query}", status_code=302)
-        result.delete_cookie(OAUTH_STATE_COOKIE, path="/auth/oauth")
+        result.delete_cookie(OAUTH_STATE_COOKIE, path="/")
         return result
 
     if provider not in PROVIDERS:
@@ -1501,7 +1502,7 @@ def oauth_callback(
     if not code or not state or not floatwatch_oauth_state or not secrets.compare_digest(state, floatwatch_oauth_state):
         return failure("로그인 요청이 만료되었거나 올바르지 않습니다.")
     try:
-        profile = exchange_profile(provider, code, state)
+        profile = exchange_profile(provider, code, state, provider_redirect_uri(provider, FRONTEND_ORIGIN))
     except ValueError as exc:
         return failure(str(exc))
 
@@ -1524,7 +1525,7 @@ def oauth_callback(
 
     response = RedirectResponse(f"{FRONTEND_ORIGIN}/auth", status_code=302)
     set_session_cookie(response, db, user)
-    response.delete_cookie(OAUTH_STATE_COOKIE, path="/auth/oauth")
+    response.delete_cookie(OAUTH_STATE_COOKIE, path="/")
     return response
 
 
