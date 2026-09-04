@@ -29,6 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy import delete, func, or_, select, text
 from sqlalchemy.orm import Session as DbSession
+from starlette.concurrency import run_in_threadpool
 
 from .analysis_service import (
     ANALYSIS_ERROR_MESSAGES,
@@ -40,11 +41,12 @@ from .analysis_service import (
     transition_analysis,
     validate_result_file,
 )
+from .ai_service import OpenAIConfigurationError, OpenAIServiceError, generate_chat_reply
 from .coastal import COASTAL_DISTANCE_METERS, classify_coastal_location
 from .database import Base, STORAGE_DIR, SessionLocal, engine
 from .models import Analysis, AuditLog, ContentAttachment, ContentComment, ContentItem, Inquiry, InquiryAttachment, ModelArtifact, OAuthIdentity, RealtimeEvent, RealtimeSession, Session, User, VideoAsset
 from .oauth import PROVIDERS, authorization_url, exchange_profile, provider_redirect_uri
-from .schemas import AccountDelete, AnalysisBatchCreate, AnalysisCreate, CommentCreate, ContentCreate, ContentUpdate, InquiryAnswer, InquiryCreate, LoginBody, MediaLocationUpdate, PasswordChange, ProfileUpdate, RealtimeEventProtect, RealtimeSessionCreate, RealtimeSessionUpdate, RegisterBody, UserAdminUpdate
+from .schemas import AccountDelete, AnalysisBatchCreate, AnalysisCreate, ChatRequest, CommentCreate, ContentCreate, ContentUpdate, InquiryAnswer, InquiryCreate, LoginBody, MediaLocationUpdate, PasswordChange, ProfileUpdate, RealtimeEventProtect, RealtimeSessionCreate, RealtimeSessionUpdate, RegisterBody, UserAdminUpdate
 from .security import hash_password, new_session_token, token_digest, verify_password
 from .storage_security import InsufficientStorageError, ensure_disk_capacity, ensure_within_storage, normalize_upload_name, safe_unlink, storage_path
 
@@ -86,6 +88,7 @@ RATE_LIMIT_RULES = {
     "upload_media": (20, 300),
     "analysis": (6, 60),
     "realtime_detect": (300, 60),
+    "chat": (20, 60),
 }
 rate_limit_lock = Lock()
 rate_limit_events: dict[tuple[str, str], deque[float]] = {}
@@ -1029,6 +1032,21 @@ def inquiry_json(item: Inquiry) -> dict:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.post("/chat")
+async def chat(body: ChatRequest, request: Request) -> dict[str, str]:
+    enforce_rate_limit("chat", request_client_key(request))
+    history = [item.model_dump() for item in body.history]
+    try:
+        reply = await run_in_threadpool(generate_chat_reply, body.message, history)
+    except OpenAIConfigurationError:
+        logger.error("event=openai_not_configured")
+        raise HTTPException(503, "AI 챗봇 API 키가 설정되지 않았습니다.")
+    except OpenAIServiceError:
+        logger.exception("event=openai_chat_failed")
+        raise HTTPException(502, "AI 답변을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.")
+    return {"reply": reply}
 
 
 @app.get("/content")

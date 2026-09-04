@@ -94,6 +94,16 @@ class InquiryAnswer(BaseModel):
     reason: str = Field(default="문의 답변 처리", min_length=2, max_length=500)
 
 
+class ChatMessage(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=300)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=10)
+
+
 class UserAdminUpdate(BaseModel):
     role: str | None = Field(default=None, pattern="^(user|admin)$")
     active: bool | None = None

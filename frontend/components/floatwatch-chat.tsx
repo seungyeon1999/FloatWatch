@@ -142,33 +142,37 @@ export function FloatWatchChat({ loggedIn }: { loggedIn: boolean }) {
   }, [open]);
   const normalizedFaqs = useMemo(() => faqs.map((item) => ({ ...item, plain: stripHtml(`${item.title} ${item.content}`) })), [faqs]);
 
-  function ask(raw: string) {
+  async function ask(raw: string) {
     const question = raw.trim(); if (!question || responding) return;
     const nextId = Date.now();
     const normalized = normalize(question);
     const guide = guides.map((item) => ({ item, score: item.words.filter((word) => normalized.includes(normalize(word))).length })).sort((a, b) => b.score - a.score)[0];
     const faq = normalizedFaqs.map((item) => ({ item, score: scoreText(normalized, normalize(item.plain)) })).sort((a, b) => b.score - a.score)[0];
-    let reply: ChatMessage;
-    if (faq && faq.score >= 2 && (!guide || faq.score > guide.score)) reply = { id: nextId + 1, role: "bot", text: compactAnswer(stripHtml(faq.item.content)) };
-    else if (guide && guide.score > 0) reply = { id: nextId + 1, role: "bot", text: compactAnswer(guide.item.text), action: guide.item.action };
-    else reply = { id: nextId + 1, role: "bot", text: "관련 안내를 찾지 못했습니다. 정확한 확인이 필요하면 1:1 문의로 내용을 남겨주세요.", action: { label: loggedIn ? "1:1 문의 작성" : "로그인 후 문의하기", view: loggedIn ? "inquiry" : "login" } };
-    const related = followUpsByView[reply.action?.view ?? ""] ?? quickQuestions;
-    const nextSuggestions = related.filter((item) => normalize(item) !== normalized).slice(0, 4);
+    let fallback: ChatMessage;
+    if (faq && faq.score >= 2 && (!guide || faq.score > guide.score)) fallback = { id: nextId + 1, role: "bot", text: compactAnswer(stripHtml(faq.item.content)) };
+    else if (guide && guide.score > 0) fallback = { id: nextId + 1, role: "bot", text: compactAnswer(guide.item.text), action: guide.item.action };
+    else fallback = { id: nextId + 1, role: "bot", text: "AI 답변을 불러오지 못했습니다. 정확한 확인이 필요하면 1:1 문의로 내용을 남겨주세요.", action: { label: loggedIn ? "1:1 문의 작성" : "로그인 후 문의하기", view: loggedIn ? "inquiry" : "login" } };
     setMessages((items) => [...items, { id: nextId, role: "user", text: question }]);
     setInput("");
     setResponding(true);
-    responseTimerRef.current = setTimeout(() => {
-      setMessages((items) => [...items, reply]);
-      setSuggestions(nextSuggestions.length === 4 ? nextSuggestions : [...nextSuggestions, ...quickQuestions.filter((item) => normalize(item) !== normalized && !nextSuggestions.includes(item))].slice(0, 4));
+    try {
+      const history = messages.slice(-10).map((item) => ({ role: item.role === "bot" ? "assistant" : "user", content: item.text }));
+      const result = await api<{ reply: string }>("/chat", { method: "POST", body: JSON.stringify({ message: question, history }) });
+      setMessages((items) => [...items, { id: nextId + 1, role: "bot", text: result.reply }]);
+      setSuggestions(quickQuestions.filter((item) => normalize(item) !== normalized).slice(0, 4));
+    } catch {
+      const related = followUpsByView[fallback.action?.view ?? ""] ?? quickQuestions;
+      setMessages((items) => [...items, fallback]);
+      setSuggestions(related.filter((item) => normalize(item) !== normalized).slice(0, 4));
+    } finally {
       setResponding(false);
-      responseTimerRef.current = null;
-    }, 720);
+    }
   }
   function submit(event: FormEvent) { event.preventDefault(); ask(input); }
   function navigate(view: string) { window.location.href = view === "login" ? "/auth?login=1" : `/auth?workspace=${view}`; }
 
   return <div ref={chatRef} className={`float-chat ${open ? "open" : ""}`}>
-    <section className={`float-chat-panel ${open ? "is-open" : "is-closed"}`} aria-label="FloatWatch 도움말 챗봇" aria-hidden={!open}><header><div><span><Bot size={19}/></span><div><strong>FloatWatch 도우미</strong><small>FAQ와 서비스 안내에서 답변합니다</small></div></div><button type="button" onClick={() => setOpen(false)} aria-label="챗봇 닫기"><X size={18}/></button></header><div className="float-chat-messages" ref={scrollRef}>{messages.map((message) => <article className={message.role} key={message.id}><p>{message.text}</p>{message.action && <button type="button" onClick={() => navigate(message.action!.view)}>{message.action.label}<ChevronRight size={14}/></button>}</article>)}{responding && <article className="bot float-chat-typing" aria-label="답변 작성 중"><p><span/><span/><span/></p></article>}</div>{!responding && <div className="float-chat-quick float-chat-followups">{suggestions.map((question) => <button type="button" onClick={() => ask(question)} key={question}>{question}</button>)}</div>}<form onSubmit={submit}><input value={input} onChange={(event) => setInput(event.target.value)} maxLength={300} placeholder={responding ? "답변을 준비하고 있습니다" : "궁금한 내용을 입력하세요"} aria-label="챗봇 질문" disabled={responding}/><button type="submit" disabled={!input.trim() || responding} aria-label="질문 보내기"><Send size={17}/></button></form><footer>현재 답변은 OpenAI를 사용하지 않습니다.</footer></section>
+    <section className={`float-chat-panel ${open ? "is-open" : "is-closed"}`} aria-label="FloatWatch 도움말 챗봇" aria-hidden={!open}><header><div><span><Bot size={19}/></span><div><strong>FloatWatch 도우미</strong><small>AI가 서비스 이용을 안내합니다</small></div></div><button type="button" onClick={() => setOpen(false)} aria-label="챗봇 닫기"><X size={18}/></button></header><div className="float-chat-messages" ref={scrollRef}>{messages.map((message) => <article className={message.role} key={message.id}><p>{message.text}</p>{message.action && <button type="button" onClick={() => navigate(message.action!.view)}>{message.action.label}<ChevronRight size={14}/></button>}</article>)}{responding && <article className="bot float-chat-typing" aria-label="답변 작성 중"><p><span/><span/><span/></p></article>}</div>{!responding && <div className="float-chat-quick float-chat-followups">{suggestions.map((question) => <button type="button" onClick={() => ask(question)} key={question}>{question}</button>)}</div>}<form onSubmit={submit}><input value={input} onChange={(event) => setInput(event.target.value)} maxLength={300} placeholder={responding ? "답변을 준비하고 있습니다" : "궁금한 내용을 입력하세요"} aria-label="챗봇 질문" disabled={responding}/><button type="submit" disabled={!input.trim() || responding} aria-label="질문 보내기"><Send size={17}/></button></form><footer>OpenAI 기반 답변 · 중요한 정보는 다시 확인해 주세요.</footer></section>
     {showScrollTop && !open && <button className="float-scroll-top" type="button" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })} aria-label="맨 위로 이동" title="맨 위로"><ArrowUp size={20}/></button>}
     <button className="float-chat-toggle" type="button" onClick={() => setOpen((value) => !value)} aria-label={open ? "챗봇 닫기" : "도움말 챗봇 열기"}>{open ? <X size={25}/> : <Bot size={30}/>}</button>
   </div>;
