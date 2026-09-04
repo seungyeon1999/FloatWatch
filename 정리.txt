@@ -1,0 +1,47 @@
+[테스트 - develop]
+* commit 멘트는 수정해서 올릴것
+
+<vscode>
+- 깃허브 수정한 파일 확인
+git status
+
+git switch develop 
+git add frontend/app/globals.css frontend/components/realtime-detection.tsx
+git commit -m "260904 OpenAI 챗봇 API 연동 테스트"
+git push origin develop
+
+<서버>
+git pull origin develop
+sudo docker compose up -d --build
+
+=========================================================================
+[서버]
+- SSH 원격 접속
+ssh mbc320-3@192.168.0.101
+
+- 컨테이너 검색
+$ docker ps | grep floatwatch
+
+- Docker 수정사항 반영(재배포)
+(cd ~/floatwatch)
+git pull origin main
+sudo docker compose up -d --build
+
+
+- 깃허브 배포 안될시 main으로 강제 맞춤
+cd ~/floatwatch
+git fetch origin
+git reset --hard origin/main
+
+- main에 develop 깃허브 그대로 복제
+git fetch origin
+git switch main
+git pull origin main
+git merge develop
+git push origin main
+
+- develop에 main 깃허브 그대로 복제
+git fetch origin
+git switch develop
+git reset --hard origin/main
+git push --force-with-lease origin develop

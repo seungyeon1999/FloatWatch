@@ -24,6 +24,14 @@ const guides = [
     action: { label: "프로젝트 개요 보기", view: "overview" },
   },
   {
+    words: ["심심", "놀아", "뭐해", "대화", "잡담", "안녕", "반가워"],
+    text: "잠깐 쉬어가는 것도 좋죠. FloatWatch 안에서는 분석 시작 방법, 지원 파일 형식, 탐색 기록, 1:1 문의 같은 내용을 바로 안내해드릴 수 있어요. 가볍게 궁금한 걸 하나 던져주세요.",
+  },
+  {
+    words: ["고마워", "감사", "좋아", "도움", "수고"],
+    text: "천만에요. 필요할 때 바로 옆에서 FloatWatch 이용 방법을 짧고 정확하게 안내해드릴게요.",
+  },
+  {
     words: ["실시간", "cctv", "드론", "연안", "카메라", "라이브"],
     text: "현재 MVP는 사용자가 업로드한 이미지와 동영상을 분석합니다. 드론과 연안 CCTV 영상을 실시간으로 연계하는 기능은 최종 목표이며, 현재 시연 범위에는 포함되지 않습니다.",
     action: { label: "개발정보 보기", view: "development" },
@@ -151,7 +159,7 @@ export function FloatWatchChat({ loggedIn }: { loggedIn: boolean }) {
     let fallback: ChatMessage;
     if (faq && faq.score >= 2 && (!guide || faq.score > guide.score)) fallback = { id: nextId + 1, role: "bot", text: compactAnswer(stripHtml(faq.item.content)) };
     else if (guide && guide.score > 0) fallback = { id: nextId + 1, role: "bot", text: compactAnswer(guide.item.text), action: guide.item.action };
-    else fallback = { id: nextId + 1, role: "bot", text: "AI 답변을 불러오지 못했습니다. 정확한 확인이 필요하면 1:1 문의로 내용을 남겨주세요.", action: { label: loggedIn ? "1:1 문의 작성" : "로그인 후 문의하기", view: loggedIn ? "inquiry" : "login" } };
+    else fallback = { id: nextId + 1, role: "bot", text: "지금은 AI 답변 연결이 원활하지 않아요. FloatWatch 이용 방법, 업로드 형식, 분석 기록, 1:1 문의처럼 서비스 관련 질문을 남겨주시면 바로 안내해드릴게요.", action: { label: loggedIn ? "1:1 문의 작성" : "로그인 후 문의하기", view: loggedIn ? "inquiry" : "login" } };
     setMessages((items) => [...items, { id: nextId, role: "user", text: question }]);
     setInput("");
     setResponding(true);
