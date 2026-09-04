@@ -1,9 +1,13 @@
+[터미널 VScode]
+Ctrl+`
+
 [테스트 - develop]
 * commit 멘트는 수정해서 올릴것
 
 <vscode>
 - 깃허브 수정한 파일 확인
 git status
+(수정한 파일이 많으면 gpt한테 깃허브 업로드 코드 줘)
 
 git switch develop 
 git add frontend/app/globals.css frontend/components/realtime-detection.tsx
@@ -20,7 +24,7 @@ sudo docker compose up -d --build
 ssh mbc320-3@192.168.0.101
 
 - 컨테이너 검색
-$ docker ps | grep floatwatch
+docker ps | grep floatwatch
 
 - Docker 수정사항 반영(재배포)
 (cd ~/floatwatch)
