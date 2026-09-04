@@ -37,14 +37,14 @@ cd ~/floatwatch
 git fetch origin
 git reset --hard origin/main
 
-- main에 develop 깃허브 그대로 복제
+- main에 파일을 모두 develop 깃허브 그대로 복제
 git fetch origin
 git switch main
 git pull origin main
 git merge develop
 git push origin main
 
-- develop에 main 깃허브 그대로 복제
+- develop에 파일을 모두 main 깃허브 그대로 복제
 git fetch origin
 git switch develop
 git reset --hard origin/main
