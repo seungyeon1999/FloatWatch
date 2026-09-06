@@ -16,13 +16,6 @@ const members = [
     accent: '#31979f',
   },
   {
-    name: '김지영',
-    initials: 'JY',
-    position: 'AI ENGINEER',
-    roles: ['AI 모델 설계', 'Deployment'],
-    accent: '#31979f',
-  },
-  {
     name: '허유진',
     initials: 'YJ',
     position: 'AI ENGINEER',
@@ -51,7 +44,13 @@ export default function TeamSlide() {
           서비스 개발부터 AI 모델 학습까지, 각자의 전문 영역을 하나의 흐름으로 연결했습니다.
         </p>
 
-        <div className={styles.gridFive} style={{ width: '100%' }}>
+        <div className={styles.gridFive} 
+        style={{     display: 'grid',
+                     gridTemplateColumns: 'repeat(4, 260px)',
+                     gap: 18,
+                     width: 'fit-content',
+                     margin: '0 auto',
+                     alignSelf: 'center', }}>
           {members.map((member) => (
             <article
               key={member.name}

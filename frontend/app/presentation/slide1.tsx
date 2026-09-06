@@ -39,7 +39,7 @@ export default function Slide1() {
         position: 'absolute',
         right: 78,
         bottom: 68,
-        width: 430,
+        width: 380,
         padding: '22px 26px 20px',
         boxSizing: 'border-box',
         border: '1px solid rgba(255,255,255,0.4)',
@@ -67,9 +67,9 @@ export default function Slide1() {
           gridTemplateColumns: 'repeat(5, 1fr)',
           alignItems: 'center',
         }}>
-          {['이지건', '노형래', '김지영', '허유진', '이승연'].map((name, index) => (
+          {['이지건', '노형래', '허유진', '이승연'].map((name, index) => (
             <div key={name} style={{
-              padding: '3px 10px',
+              padding: '3px 18px',
               borderLeft: index === 0 ? 'none' : '1px solid rgba(51,87,86,0.2)',
               color: '#102f31',
               fontSize: 17,

@@ -1,4 +1,4 @@
-[터미널 VScode]
+[VScode 터미널]
 Ctrl+`
 
 [테스트 - develop]
@@ -9,10 +9,10 @@ Ctrl+`
 git status
 (수정한 파일이 많으면 gpt한테 깃허브 업로드 코드 줘)
 
-git switch develop 
-git add frontend/app/globals.css frontend/components/realtime-detection.tsx
-git commit -m "260904 OpenAI 챗봇 API 연동 테스트"
-git push origin develop
+git switch main
+git add 1.note.txt frontend/app/presentation/TeamSlide.tsx frontend/app/presentation/slide1.tsx frontend/package-lock.json
+git commit -m "260907 ppt 3페이지까지 수정완료"
+git push origin main
 
 <서버>
 git pull origin develop
@@ -37,15 +37,13 @@ cd ~/floatwatch
 git fetch origin
 git reset --hard origin/main
 
-- main에 파일을 모두 develop 깃허브 그대로 복제
-git fetch origin
-git switch main
-git pull origin main
-git merge develop
-git push origin main
+=========================================================================
 
-- develop에 파일을 모두 main 깃허브 그대로 복제
-git fetch origin
-git switch develop
-git reset --hard origin/main
-git push --force-with-lease origin develop
+[로컬에서 수정한 것 확인]
+<vscode>
+cd frontend
+npm install
+npm run dev
+
+http://localhost:3000/presentation
+
