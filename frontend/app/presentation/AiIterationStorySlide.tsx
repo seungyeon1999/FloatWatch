@@ -105,12 +105,15 @@ const defaultRounds: ExperimentRound[] = [
     classFocus: '취약 클래스의 미탐지 표본 집중 보강',
     basisTitle: '3차 학습에서 확인한 한계',
     basis: '• Recall이 90% 목표에 근접했으나 미달\n• 혼동 행렬에서 일부 취약 클래스의 미탐지 잔존',
-    actionTitle: '4차 학습 반영 계획',
+    actionTitle: '4차 학습 반영 내용',
     action: '• 취약 클래스 미탐지 표본 추가 및 라벨 재점검\n• 과도한 증강을 줄여 일반화 성능 확인\n• 다중 Seed 반복 학습으로 재현성 검증',
     params: '3차 최적 조건을 기준으로 고정\n동일 조건 다중 Seed 반복 학습',
     augment: '취약 클래스 중심 선택 증강\n과도한 변형은 축소해 일반화 검증',
-    metrics: { precision: '검증 예정', recall: '목표 90% 이상', map50: '검증 예정', map95: '검증 예정' },
-    next: true,
+    metrics: { precision: 'TODO / TODO', recall: 'TODO / TODO', map50: 'TODO / TODO', map95: 'TODO / TODO' },
+    assets: [
+      { model: 'YOLOv8s', chart: '/presentation/ai-iteration-round4/yolov8s/results.png', photo: '/presentation/ai-iteration-round4/yolov8s/val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-round4/yolov8s/confusion_matrix_normalized.png' },
+      { model: 'YOLO11s', chart: '/presentation/ai-iteration-round4/yolov11s/results.png', photo: '/presentation/ai-iteration-round4/yolov11s/val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-round4/yolov11s/confusion_matrix_normalized.png' },
+    ],
   },
 ];
 
@@ -240,6 +243,6 @@ export default function AiIterationStorySlide() {
     subtitle="각 실험은 가중치를 이어받지 않고 독립적으로 학습했으며, 이전 결과에서 확인한 한계를 다음 데이터·학습 조건에 반영했습니다."
     pageNumber={9}
     modelNames={['YOLOv8s', 'YOLO11s']}
-    defaultIndex={2}
+    defaultIndex={3}
   />;
 }

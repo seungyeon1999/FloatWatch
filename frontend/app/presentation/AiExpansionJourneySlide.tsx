@@ -48,12 +48,15 @@ const rounds: ExperimentRound[] = [
     classFocus: 'Rope 87% · Styrofoam Piece 82% 취약 구간 개선',
     basisTitle: '2차 학습에서 확인한 한계',
     basis: '• RT-DETR-L Recall은 88.63%로 목표 90%에 근접\n• Rope와 Styrofoam Piece의 미탐지·혼동 잔존',
-    actionTitle: '3차 학습 반영 계획',
+    actionTitle: '3차 학습 반영 내용',
     action: '• 취약 클래스 표본 추가 및 라벨 재점검\n• 배경으로 누락된 객체와 유사 배경의 오탐 사례 보강\n• 동일 조건 다중 Seed 학습으로 성능 재현성 검증',
     params: '2차 최적 조건 기준 · 800px · Batch 4\n다중 Seed 반복 학습 · 조기 종료 비교',
     augment: '취약 클래스 중심 선택 증강\n과도한 변형 축소 · 유사 배경 표본 추가',
-    metrics: { precision: '검증 예정', recall: '목표 90% 이상', map50: '검증 예정', map95: '2차 이상 유지' },
-    next: true,
+    metrics: { precision: 'TODO / TODO', recall: 'TODO / TODO', map50: 'TODO / TODO', map95: 'TODO / TODO' },
+    assets: [
+      { model: 'YOLO26s', chart: '/presentation/ai-iteration-expansion-round3/yolo26s/TODO-results.png', photo: '/presentation/ai-iteration-expansion-round3/yolo26s/TODO-val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-expansion-round3/yolo26s/TODO-confusion_matrix_normalized.png' },
+      { model: 'RT-DETR-L', chart: '/presentation/ai-iteration-expansion-round3/rtdetr-l/TODO-results.png', photo: '/presentation/ai-iteration-expansion-round3/rtdetr-l/TODO-val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-expansion-round3/rtdetr-l/TODO-confusion_matrix_normalized.png' },
+    ],
   },
 ];
 
@@ -65,6 +68,6 @@ export default function AiExpansionJourneySlide() {
     subtitle="클래스 균형과 증강 조건을 조정해 두 모델의 2차 성능을 개선했으며, 다음 학습에서는 취약 클래스 미탐지 보완과 Recall 90% 이상을 검증합니다."
     pageNumber={10}
     modelNames={['YOLO26s', 'RT-DETR-L']}
-    defaultIndex={1}
+    defaultIndex={2}
   />;
 }

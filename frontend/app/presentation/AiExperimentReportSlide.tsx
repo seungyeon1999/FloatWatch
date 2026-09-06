@@ -86,7 +86,7 @@ function LightThemeMatrixImage({ src, alt }: { src: string; alt: string }) {
   return <canvas ref={canvasRef} role="img" aria-label={alt} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }}/>
 }
 
-export default function AiExperimentReportSlide({ chapter, title, subtitle, models, setup, result, feedback, nextPlan, pageNumber }: {
+export default function AiExperimentReportSlide({ chapter, title, subtitle, models, setup, result, feedback, nextPlan, pageNumber, assetRoot }: {
   chapter: string;
   title: string;
   subtitle: string;
@@ -96,11 +96,12 @@ export default function AiExperimentReportSlide({ chapter, title, subtitle, mode
   feedback: string[];
   nextPlan: string[];
   pageNumber: number;
+  assetRoot: string;
 }) {
   const [selected, setSelected] = useState<ExperimentModel | null>(null);
   const [detail, setDetail] = useState<DetailView>('curves');
   const open = (model: ExperimentModel, view: DetailView) => { setSelected(model); setDetail(view); };
-  const root = '/presentation/ai-report-round2';
+  const root = assetRoot;
 
   return <div className={styles.slide}>
     <div className={styles.logo}><span className={styles.logoMark}>Float</span><span className={styles.logoAccent}>W</span><span className={styles.logoText}>atch</span></div>

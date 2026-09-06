@@ -45,12 +45,12 @@ export default function TeamSlide() {
         </p>
 
         <div className={styles.gridFive} 
-        style={{     display: 'grid',
-                     gridTemplateColumns: 'repeat(4, 260px)',
-                     gap: 18,
-                     width: 'fit-content',
-                     margin: '0 auto',
-                     alignSelf: 'center', }}>
+        style={{ display: 'grid',
+                 gridTemplateColumns: 'repeat(4, 280px)',
+                 gap: 22,
+                 width: 'fit-content',
+                 margin: '0 auto',
+                 alignSelf: 'center', }}>
           {members.map((member) => (
             <article
               key={member.name}

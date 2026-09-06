@@ -61,7 +61,7 @@ export default function AiConfusion3DSlide(){
   <div className={styles.content} style={{justifyContent:'flex-start',paddingTop:88,paddingBottom:28}}>
    <div className={styles.chapterBadge}>AI Report C · Final PT 3D Comparison</div>
    <h1 className={styles.slideTitle} style={{marginBottom:0}}>최종 PT 기준 4개 모델 3D 비교</h1>
-   <p className={styles.slideSubtitle} style={{margin:'7px 0 12px',maxWidth:1320,color:'#344e4c',fontSize:17,fontWeight:700}}>YOLOv8s·YOLO11s 3차와 YOLO26s·RT-DETR-L 2차 최종 PT의 정규화 혼동행렬을 같은 축에서 비교했습니다.</p>
+   <p className={styles.slideSubtitle} style={{margin:'7px 0 12px',maxWidth:1320,color:'#344e4c',fontSize:17,fontWeight:700}}>YOLOv8s·YOLO11s 4차와 YOLO26s·RT-DETR-L 3차 최종 PT의 정규화 혼동행렬을 같은 축에서 비교했습니다.</p>
    <section style={{display:'grid',gridTemplateColumns:'1.68fr .52fr',gap:18,width:'100%',height:532,padding:16,boxSizing:'border-box',border:'1px solid #c8d5d9',borderRadius:17,background:'rgba(255,255,255,.86)',boxShadow:'0 14px 30px rgba(29,52,62,.08)'}}>
     <div data-slide-interactive="true" onClick={e=>e.stopPropagation()} onDoubleClick={e=>e.stopPropagation()} style={{position:'relative',overflow:'hidden',borderRadius:13,background:'linear-gradient(145deg,#f8fbfb,#dce8e9)',userSelect:'none',display:'grid',gridTemplateRows:'39px 1fr'}}>
      <div style={{display:'flex',alignItems:'center',gap:13,padding:'0 12px 0 16px',borderBottom:'1px solid rgba(84,119,126,.16)',background:'rgba(255,255,255,.5)',boxSizing:'border-box'}}>

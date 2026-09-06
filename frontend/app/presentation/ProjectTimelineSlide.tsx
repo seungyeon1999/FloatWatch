@@ -29,7 +29,7 @@ const phases = [
     week: '5주차',
     date: '08.29 — 09.08',
     title: '최종 통합 테스트',
-    status: 'PLAN',
+    status: 'DONE',
     items: ['전체 기능 · 예외 상황 통합 테스트', '시연 데이터와 발표 시나리오 점검', '최종 모델 선정 · 발표자료 정리'],
   },
 ];
@@ -50,7 +50,7 @@ export default function ProjectTimelineSlide() {
 
         <div style={{ position: 'relative', width: '100%' }}>
           <div style={{ position: 'absolute', left: 55, right: 55, top: 28, height: 3, borderRadius: 3, background: '#c7d9d6' }} />
-          <div style={{ position: 'absolute', left: 55, width: '75%', top: 28, height: 3, borderRadius: 3, background: '#e56b3f' }} />
+          <div style={{ position: 'absolute', left: 55, width: '100%', top: 28, height: 3, borderRadius: 3, background: '#e56b3f' }} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
             {phases.map((phase) => (
               <section key={phase.week} style={{ position: 'relative', paddingTop: 58 }}>
