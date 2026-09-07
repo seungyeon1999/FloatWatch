@@ -9,7 +9,10 @@ from app.analysis_service import (
     OpticalFlowBoxTracker,
     TemporalDetectionFilter,
     class_confidence_indices,
+    draw_image_result_non_overlapping,
     draw_tracked_boxes,
+    label_rectangles_overlap,
+    place_label_rect,
     representative_image_predict_options,
 )
 
@@ -53,6 +56,61 @@ def test_representative_image_predict_options_select_model_specific_size():
     assert representative_image_predict_options(SimpleNamespace(model_key="yolov26s", is_representative=True))["imgsz"] == 960
     assert representative_image_predict_options(SimpleNamespace(model_key="rt-detr", is_representative=True)) is None
     assert representative_image_predict_options(SimpleNamespace(model_key="yolov8s", is_representative=False)) is None
+
+
+def test_image_label_prefers_box_top_when_available():
+    rect = place_label_rect((20, 30, 70, 80), 52, 18, 200, 120, [])
+
+    assert rect == (20, 12, 72, 30)
+
+
+def test_image_label_moves_away_from_nearby_label_collision():
+    used = [(20, 12, 72, 30)]
+
+    rect = place_label_rect((22, 32, 72, 82), 52, 18, 200, 120, used)
+
+    assert not label_rectangles_overlap(rect, used[0])
+
+
+def test_image_label_stays_inside_top_and_side_edges():
+    top_rect = place_label_rect((10, 2, 60, 40), 52, 18, 200, 120, [])
+    edge_rect = place_label_rect((170, 50, 199, 90), 52, 18, 200, 120, [])
+
+    assert top_rect[1] >= 0
+    assert top_rect[1] >= 40
+    assert edge_rect[0] >= 0
+    assert edge_rect[2] <= 200
+
+
+def test_image_annotation_keeps_all_detection_payloads_unchanged():
+    class FakeTensor:
+        def __init__(self, values):
+            self.values = values
+
+        def cpu(self):
+            return self
+
+        def tolist(self):
+            return self.values
+
+    coordinates = [[float(index), 10.0, float(index + 20), 30.0] for index in range(10)]
+    confidences = [0.75 + index * 0.01 for index in range(10)]
+    class_ids = [float(index % 3) for index in range(10)]
+    boxes = SimpleNamespace(
+        xyxy=FakeTensor(coordinates),
+        conf=FakeTensor(confidences),
+        cls=FakeTensor(class_ids),
+    )
+    result = SimpleNamespace(boxes=boxes)
+    frame = np.zeros((100, 160, 3), dtype=np.uint8)
+
+    annotated = draw_image_result_non_overlapping(frame, result, {0: "Glass", 1: "Rope", 2: "Styrofoam_Piece"})
+
+    assert annotated.shape == frame.shape
+    assert np.count_nonzero(annotated) > 0
+    assert result.boxes.xyxy.tolist() == coordinates
+    assert result.boxes.conf.tolist() == confidences
+    assert result.boxes.cls.tolist() == class_ids
 
 
 def test_temporal_filter_requires_three_consecutive_overlapping_detections():

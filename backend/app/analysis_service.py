@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import importlib.metadata
 import subprocess
 import json
 import logging
@@ -7,6 +9,7 @@ import math
 import os
 import re
 import shutil
+import sys
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -182,6 +185,108 @@ def representative_image_predict_options(model_artifact: object) -> dict[str, in
     }
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def package_version(package_name: str) -> str:
+    try:
+        return importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
+        return "not-installed"
+
+
+def inference_environment_info() -> dict[str, object]:
+    info: dict[str, object] = {
+        "python_version": sys.version.split()[0],
+        "ultralytics_version": package_version("ultralytics"),
+        "opencv_version": cv2.__version__,
+        "inference_device": INFERENCE_DEVICE,
+    }
+    try:
+        import torch
+
+        cuda_available = torch.cuda.is_available()
+        info.update({
+            "torch_version": getattr(torch, "__version__", "unknown"),
+            "cuda_available": cuda_available,
+            "torch_cuda_version": getattr(torch.version, "cuda", None),
+            "gpu_name": torch.cuda.get_device_name(0) if cuda_available else None,
+        })
+    except Exception as exc:
+        info.update({
+            "torch_version": f"unavailable: {exc}",
+            "cuda_available": False,
+            "torch_cuda_version": None,
+            "gpu_name": None,
+        })
+    return info
+
+
+def detection_rows(result, names: dict[int, str]) -> list[dict[str, object]]:
+    boxes = result.boxes
+    if boxes is None:
+        return []
+    coordinates = boxes.xyxy.cpu().tolist()
+    confidences = boxes.conf.cpu().tolist()
+    class_ids = [int(value) for value in boxes.cls.cpu().tolist()]
+    return [
+        {
+            "index": index,
+            "class_id": class_id,
+            "class_name": str(names.get(class_id, class_id)),
+            "confidence": float(confidence),
+            "xyxy": tuple(float(value) for value in coordinates_item),
+        }
+        for index, (class_id, confidence, coordinates_item) in enumerate(zip(class_ids, confidences, coordinates))
+    ]
+
+
+def log_detection_rows(prefix: str, rows: list[dict[str, object]], count_label: str) -> None:
+    logger.info("%s %s=%s", prefix, count_label, len(rows))
+    for row in rows:
+        logger.info(
+            "%s %s | class_id=%s | class=%s | conf=%.4f | box=(%.2f, %.2f, %.2f, %.2f)",
+            prefix,
+            row["index"],
+            row["class_id"],
+            row["class_name"],
+            row["confidence"],
+            *row["xyxy"],
+        )
+
+
+def log_filter_decisions(
+    raw_class_ids: list[int],
+    raw_confidences: list[float],
+    names: dict[int, str],
+    base_confidence: float,
+    class_thresholds: dict[str, float] | None,
+) -> list[int]:
+    kept = class_confidence_indices(raw_class_ids, raw_confidences, names, base_confidence, class_thresholds)
+    kept_set = set(kept)
+    logger.info("[FILTER DEBUG] class_thresholds=%s", "enabled" if class_thresholds is not None else "default")
+    for index, (class_id, confidence) in enumerate(zip(raw_class_ids, raw_confidences)):
+        class_name = str(names.get(class_id, class_id))
+        normalized_class_name = normalize_class_name(class_name)
+        if class_thresholds is not None:
+            threshold = class_thresholds.get(normalized_class_name, base_confidence)
+        else:
+            threshold = max(base_confidence, NET_MIN_CONFIDENCE) if normalized_class_name == "net" else base_confidence
+        logger.info(
+            "[FILTER DEBUG] %s conf=%.4f threshold=%.2f %s",
+            class_name,
+            confidence,
+            threshold,
+            "KEEP" if index in kept_set else "REMOVE",
+        )
+    return kept
+
+
 def box_iou(left: tuple[float, float, float, float], right: tuple[float, float, float, float]) -> float:
     x1 = max(left[0], right[0])
     y1 = max(left[1], right[1])
@@ -324,6 +429,95 @@ def draw_tracked_boxes(frame: np.ndarray, detections: list[dict], names: dict[in
         label_top = max(0, y1 - label_height - baseline - 6)
         cv2.rectangle(annotated, (x1, label_top), (x1 + label_width + 8, y1), color, -1)
         cv2.putText(annotated, label, (x1 + 4, max(label_height + 2, y1 - baseline - 3)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (8, 32, 35), 1, cv2.LINE_AA)
+    return annotated
+
+
+def label_rectangles_overlap(left: tuple[int, int, int, int], right: tuple[int, int, int, int], padding: int = 3) -> bool:
+    ax1, ay1, ax2, ay2 = left
+    bx1, by1, bx2, by2 = right
+    return not (
+        ax2 + padding <= bx1
+        or bx2 + padding <= ax1
+        or ay2 + padding <= by1
+        or by2 + padding <= ay1
+    )
+
+
+def clamp_label_rect(x: int, y: int, width: int, height: int, image_width: int, image_height: int) -> tuple[int, int, int, int]:
+    x = max(0, min(x, max(0, image_width - width)))
+    y = max(0, min(y, max(0, image_height - height)))
+    return (x, y, min(image_width, x + width), min(image_height, y + height))
+
+
+def place_label_rect(
+    box: tuple[int, int, int, int],
+    label_width: int,
+    label_height: int,
+    image_width: int,
+    image_height: int,
+    used_label_rects: list[tuple[int, int, int, int]],
+) -> tuple[int, int, int, int]:
+    x1, y1, x2, y2 = box
+    padding = 3
+    candidates = [
+        (x1, y1 - label_height),
+        (x1, y2),
+        (x1, y1 - label_height * 2 - padding),
+        (x1, y2 + label_height + padding),
+        (x1 + label_height, y1 - label_height),
+        (x2 - label_width, y1 - label_height),
+        (x1 + label_height, y2),
+        (x2 - label_width, y2),
+    ]
+    for x, y in candidates:
+        if y < 0 or y + label_height > image_height:
+            continue
+        rect = clamp_label_rect(x, y, label_width, label_height, image_width, image_height)
+        if not any(label_rectangles_overlap(rect, used) for used in used_label_rects):
+            return rect
+    return clamp_label_rect(x1, y1 - label_height, label_width, label_height, image_width, image_height)
+
+
+def draw_image_result_non_overlapping(frame: np.ndarray, result, names: dict[int, str]) -> np.ndarray:
+    """Render image-analysis results with label boxes shifted to avoid overlap."""
+    annotated = frame.copy()
+    boxes = result.boxes
+    if boxes is None:
+        return annotated
+
+    coordinates = boxes.xyxy.cpu().tolist()
+    confidences = boxes.conf.cpu().tolist()
+    class_ids = [int(value) for value in boxes.cls.cpu().tolist()]
+    image_height, image_width = annotated.shape[:2]
+    color = (74, 211, 199)
+    text_color = (8, 32, 35)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.5
+    thickness = 1
+    used_label_rects: list[tuple[int, int, int, int]] = []
+
+    for coordinates_item, class_id, confidence in zip(coordinates, class_ids, confidences):
+        x1, y1, x2, y2 = (int(round(value)) for value in coordinates_item)
+        x1 = max(0, min(x1, max(0, image_width - 1)))
+        y1 = max(0, min(y1, max(0, image_height - 1)))
+        x2 = max(0, min(x2, max(0, image_width - 1)))
+        y2 = max(0, min(y2, max(0, image_height - 1)))
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2, cv2.LINE_AA)
+
+        label = f"{names.get(class_id, class_id)} {float(confidence):.2f}"
+        label_font_scale = font_scale
+        (text_width, text_height), baseline = cv2.getTextSize(label, font, label_font_scale, thickness)
+        if text_width + 8 > image_width:
+            label_font_scale = max(0.35, (image_width - 8) / max(text_width, 1) * label_font_scale)
+            (text_width, text_height), baseline = cv2.getTextSize(label, font, label_font_scale, thickness)
+        label_width = min(image_width, text_width + 8)
+        label_height = text_height + baseline + 6
+        label_rect = place_label_rect((x1, y1, x2, y2), label_width, label_height, image_width, image_height, used_label_rects)
+        used_label_rects.append(label_rect)
+        lx1, ly1, lx2, ly2 = label_rect
+        cv2.rectangle(annotated, (lx1, ly1), (lx2, ly2), color, -1)
+        text_y = min(ly2 - baseline - 3, max(ly1 + text_height + 2, ly1 + text_height))
+        cv2.putText(annotated, label, (lx1 + 4, text_y), font, label_font_scale, text_color, thickness, cv2.LINE_AA)
     return annotated
 
 
@@ -534,6 +728,8 @@ def run_analysis(analysis_id: int) -> None:
             frame = cv2.imread(str(source_path))
             if frame is None:
                 raise ValueError("이미지 파일을 읽을 수 없습니다.")
+            source_image_sha256 = sha256_file(source_path)
+            model_sha256 = sha256_file(model_path)
             advance_progress(analysis, 25)
             db.commit()
             started = time.perf_counter()
@@ -543,6 +739,31 @@ def run_analysis(analysis_id: int) -> None:
             if image_predict_options is not None:
                 predict_options.update(image_predict_options)
                 class_thresholds = CLASS_CONFIDENCE_THRESHOLDS
+            logger.info(
+                "[IMAGE INFERENCE DEBUG] analysis_id=%s model_id=%s model_name=%s model_key=%s "
+                "is_representative=%s model_path=%s model_sha256=%s source_image_path=%s "
+                "source_image_sha256=%s image_shape=%sx%sx%s device=%s conf=%s iou=%s imgsz=%s "
+                "max_det=%s class_thresholds=%s environment=%s",
+                analysis.id,
+                analysis.model.id,
+                analysis.model.name,
+                analysis.model.model_key,
+                analysis.model.is_representative,
+                model_path,
+                model_sha256,
+                source_path,
+                source_image_sha256,
+                frame.shape[1],
+                frame.shape[0],
+                frame.shape[2] if len(frame.shape) > 2 else 1,
+                INFERENCE_DEVICE,
+                predict_options.get("conf"),
+                predict_options.get("iou"),
+                predict_options.get("imgsz"),
+                predict_options.get("max_det"),
+                "enabled" if class_thresholds is not None else "default",
+                inference_environment_info(),
+            )
             result = model.predict(frame, **predict_options, device=INFERENCE_DEVICE, verbose=False)[0]
             ensure_runtime_budget()
             db.refresh(analysis)
@@ -554,12 +775,14 @@ def run_analysis(analysis_id: int) -> None:
             boxes = result.boxes
             raw_confidences = boxes.conf.cpu().tolist() if boxes is not None else []
             raw_class_ids = [int(value) for value in boxes.cls.cpu().tolist()] if boxes is not None else []
-            result = filter_result(result, class_confidence_indices(raw_class_ids, raw_confidences, names, analysis.confidence, class_thresholds))
+            log_detection_rows("[RAW DETECTIONS]", detection_rows(result, names), "raw_detection_count")
+            result = filter_result(result, log_filter_decisions(raw_class_ids, raw_confidences, names, analysis.confidence, class_thresholds))
+            log_detection_rows("[FINAL DETECTIONS]", detection_rows(result, names), "final_detection_count")
             output_path = storage_path(STORAGE_DIR, "outputs", f"analysis-{analysis.id}.jpg")
             output_path.parent.mkdir(parents=True, exist_ok=True)
             advance_progress(analysis, 92)
             db.commit()
-            if not cv2.imwrite(str(output_path), result.plot()):
+            if not cv2.imwrite(str(output_path), draw_image_result_non_overlapping(frame, result, names)):
                 raise ValueError("결과 이미지를 저장할 수 없습니다.")
             try:
                 validate_result_file(output_path, "image")
