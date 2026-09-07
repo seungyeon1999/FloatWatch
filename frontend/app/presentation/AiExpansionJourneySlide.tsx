@@ -57,8 +57,7 @@ const rounds: ExperimentRound[] = [
       {
         model: 'YOLO26s',
         charts: [
-          { src: '/presentation/ai-iteration-round3/yolo26s-pr.png', label: 'PR' },
-          { src: '/presentation/ai-iteration-round3/yolo26s-f1.png', label: 'F1' },
+          { src: '/presentation/ai-iteration-round3/yolo26s_results.png', label: 'Training Result' },
         ],
         photos: [
           { src: '/presentation/ai-iteration-round3/yolo26s_label_01.jpg', label: '탐지 01' },
@@ -72,8 +71,7 @@ const rounds: ExperimentRound[] = [
       {
         model: 'RT-DETR-L',
         charts: [
-          { src: '/presentation/ai-report-round2/rtdetr-pr.png', label: 'PR' },
-          { src: '/presentation/ai-report-round2/rtdetr-f1.png', label: 'F1' },
+          { src: '/presentation/ai-report-round2/rtdetr-results.png', label: 'Training Result' },
         ],
         photos: [
           { src: '/presentation/ai-report-round2/rtdetr-labels.jpg', label: '라벨' },

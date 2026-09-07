@@ -8,10 +8,10 @@ type Point={x:number;y:number;z:number;model:string;color:string;label:string};
 const codes=['GL','ME','NE','PET','PB','PBC','PE','RO','SBX','SBY','SP'];
 const names=['Glass','Metal','Net','PET Bottle','Plastic Buoy','Plastic Buoy (China)','Plastic ETC','Rope','Styrofoam Box','Styrofoam Buoy','Styrofoam Piece'];
 const models:Model[]=[
- {name:'YOLOv8s',color:'#12bfb4',diagonal:[.85,.80,.94,.78,.87,.91,.78,.93,.79,.92,.72],errors:[[8,10,.16]]},
- {name:'YOLO11s',color:'#438df5',diagonal:[.83,.75,.95,.75,.84,.89,.74,.94,.70,.90,.70],errors:[[8,10,.23],[10,8,.12]]},
- {name:'YOLO26s',color:'#f2a916',diagonal:[.87,.81,.95,.78,.89,.93,.78,.94,.84,.94,.76],errors:[[8,10,.11]]},
- {name:'RT-DETR-L',color:'#ee4b8b',diagonal:[.95,.93,.91,.88,.94,.98,.88,.87,.93,.95,.82],errors:[]},
+ {name:'YOLOv8s',color:'#12bfb4',diagonal:[.93,.90,.95,.89,.95,.99,.89,.92,.91,.97,.92],errors:[]},
+ {name:'YOLO11s',color:'#438df5',diagonal:[.93,.92,.95,.87,.93,.98,.87,.92,.89,.97,.92],errors:[]},
+ {name:'YOLO26s',color:'#f2a916',diagonal:[.94,.91,.94,.89,.94,.98,.87,.90,.90,.96,.91],errors:[]},
+ {name:'RT-DETR-L',color:'#ee4b8b',diagonal:[.27,.23,.53,.42,.43,.34,.32,.57,.29,.25,.32],errors:[[1,0,.10],[3,1,.12],[5,1,.12],[4,2,.10],[7,2,.17],[8,2,.14],[0,3,.17],[1,3,.14],[6,3,.12],[0,4,.11],[1,6,.12],[9,6,.11],[0,7,.12],[2,7,.15],[4,7,.12],[5,7,.12],[9,7,.32],[10,7,.12],[10,8,.11],[8,9,.10],[8,10,.16]]},
 ];
 
 const graphPoints:Point[]=models.flatMap((m,mi)=>[
