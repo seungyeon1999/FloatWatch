@@ -11,7 +11,7 @@ const models:Model[]=[
  {name:'YOLOv8s',color:'#12bfb4',diagonal:[.93,.90,.95,.89,.95,.99,.89,.92,.91,.97,.92],errors:[]},
  {name:'YOLO11s',color:'#438df5',diagonal:[.93,.92,.95,.87,.93,.98,.87,.92,.89,.97,.92],errors:[]},
  {name:'YOLO26s',color:'#f2a916',diagonal:[.94,.91,.94,.89,.94,.98,.87,.90,.90,.96,.91],errors:[]},
- {name:'RT-DETR-L',color:'#ee4b8b',diagonal:[.27,.23,.53,.42,.43,.34,.32,.57,.29,.25,.32],errors:[[1,0,.10],[3,1,.12],[5,1,.12],[4,2,.10],[7,2,.17],[8,2,.14],[0,3,.17],[1,3,.14],[6,3,.12],[0,4,.11],[1,6,.12],[9,6,.11],[0,7,.12],[2,7,.15],[4,7,.12],[5,7,.12],[9,7,.32],[10,7,.12],[10,8,.11],[8,9,.10],[8,10,.16]]},
+ {name:'RT-DETR-L',color:'#ee4b8b',diagonal:[.95,.93,.91,.88,.94,.98,.88,.87,.93,.95,.82],errors:[]},
 ];
 
 const graphPoints:Point[]=models.flatMap((m,mi)=>[
@@ -61,7 +61,7 @@ export default function AiConfusion3DSlide(){
   <div className={styles.content} style={{justifyContent:'flex-start',paddingTop:88,paddingBottom:28}}>
    <div className={styles.chapterBadge}>AI Report C · Final PT 3D Comparison</div>
    <h1 className={styles.slideTitle} style={{marginBottom:0}}>최종 PT 기준 4개 모델 3D 비교</h1>
-   <p className={styles.slideSubtitle} style={{margin:'7px 0 12px',maxWidth:1320,color:'#344e4c',fontSize:17,fontWeight:700}}>YOLOv8s·YOLO11s 4차와 YOLO26s·RT-DETR-L 3차 최종 PT의 정규화 혼동행렬을 같은 축에서 비교했습니다.</p>
+   <p className={styles.slideSubtitle} style={{margin:'7px 0 12px',maxWidth:1320,color:'#344e4c',fontSize:17,fontWeight:700}}>YOLOv8s·YOLO11s 4차, YOLO26s 3차, RT-DETR-L 2차 최종 사용 PT의 정규화 혼동행렬을 같은 축에서 비교했습니다.</p>
    <section style={{display:'grid',gridTemplateColumns:'1.68fr .52fr',gap:18,width:'100%',height:532,padding:16,boxSizing:'border-box',border:'1px solid #c8d5d9',borderRadius:17,background:'rgba(255,255,255,.86)',boxShadow:'0 14px 30px rgba(29,52,62,.08)'}}>
     <div data-slide-interactive="true" onClick={e=>e.stopPropagation()} onDoubleClick={e=>e.stopPropagation()} style={{position:'relative',overflow:'hidden',borderRadius:13,background:'linear-gradient(145deg,#f8fbfb,#dce8e9)',userSelect:'none',display:'grid',gridTemplateRows:'39px 1fr'}}>
      <div style={{display:'flex',alignItems:'center',gap:13,padding:'0 12px 0 16px',borderBottom:'1px solid rgba(84,119,126,.16)',background:'rgba(255,255,255,.5)',boxSizing:'border-box'}}>
@@ -116,7 +116,7 @@ export default function AiConfusion3DSlide(){
      </section>
     </aside>
    </section>
-   <div style={{marginTop:7,color:'#50666a',fontSize:11,fontWeight:800}}>※ Z값은 실제 클래스별 정규화 예측 비율입니다. 각 모델의 현재 최종 PT 혼동행렬 대각선 값과 클래스 간 10% 이상의 주요 오분류를 표시했습니다.</div>
+   <div style={{marginTop:7,color:'#50666a',fontSize:11,fontWeight:800}}>※ Z값은 실제 클래스별 정규화 예측 비율입니다. 각 모델의 현재 최종 사용 PT 혼동행렬 대각선 값을 중심으로 비교했습니다.</div>
   </div><div className={styles.pageNumber}>11</div>
  </div>
 }
