@@ -49,13 +49,13 @@ CLASS_CONFIDENCE_THRESHOLDS = {
 
 YOLO26S_CLASS_CONFIDENCE_THRESHOLDS = {
     "glass": 0.40,
-    "metal": 0.20,
+    "metal": 0.45,
     "net": 0.35,
     "pet_bottle": 0.35,
-    "plastic_buoy": 0.35,
-    "plastic_buoy_china": 0.75,
-    "plastic_etc": 0.50,
-    "rope": 0.45,
+    "plastic_buoy": 0.60,
+    "plastic_buoy_china": 0.50,
+    "plastic_etc": 0.70,
+    "rope": 0.35,
     "styrofoam_box": 0.40,
     "styrofoam_buoy": 0.35,
     "styrofoam_piece": 0.50,
@@ -202,10 +202,10 @@ def representative_image_predict_options(model_artifact: object) -> dict[str, in
 
     if model_key == "yolov26s":
         return {
-            "conf": 0.03,
-            "iou": 0.55,
-            "imgsz": 1536,
-            "max_det": 500,
+            "conf": 0.10,
+            "iou": 0.40,
+            "imgsz": 1280,
+            "max_det": 300,
         }
 
     image_size = REPRESENTATIVE_IMAGE_SIZES.get(model_key)
