@@ -30,7 +30,7 @@ REPRESENTATIVE_IMAGE_MAX_DETECTIONS = 300
 REPRESENTATIVE_IMAGE_SIZES = {
     "yolov8s": 800,
     "yolov11s": 1280,
-    "yolov26s": 960,
+    "yolov26s": 1280,
 }
 CLASS_CONFIDENCE_THRESHOLDS = {
     "glass": 0.35,
