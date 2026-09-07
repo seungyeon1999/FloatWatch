@@ -57,8 +57,7 @@ const round4Models: ModelReport[] = [
     precision: '93.35%',
     recall: '91.05%',
     charts: [
-      { title: 'Precision–Recall Curve', placeholder: '/presentation/ai-report-round4/yolov8s-pr.png' },
-      { title: 'F1–Confidence Curve', placeholder: '/presentation/ai-report-round4/yolov8s-f1.png' },
+      { title: 'Training Results', src: '/presentation/ai-report-round4/yolov8s_results.png' },
     ],
   },
   {
@@ -71,8 +70,7 @@ const round4Models: ModelReport[] = [
     precision: '94.18%',
     recall: '90.22%',
     charts: [
-      { title: 'Precision–Recall Curve', placeholder: '/presentation/ai-report-round4/yolo11s-pr.png' },
-      { title: 'F1–Confidence Curve', placeholder: '/presentation/ai-report-round4/yolo11s-f1.png' },
+      { title: 'Training Results', src: '/presentation/ai-report-round4/yolo11s_results.png' },
     ],
   },
 ];
@@ -105,25 +103,25 @@ const analysisComparisonsByModel: Record<string, AnalysisComparison[]> = {
   'yolov8s-r4': [
     {
       example: '예시 01',
-      label: { title: '라벨링 사진', placeholder: '/presentation/ai-report-round4/yolov8s_label_01.png' },
-      inference: { title: '추론 사진', placeholder: '/presentation/ai-report-round4/yolov8s_label_01.png' },
+      label: { title: '라벨링 사진', src: '/presentation/ai-report-round4/yolov8s_label_01.jpg' },
+      inference: { title: '추론 사진', src: '/presentation/ai-report-round4/yolov8s-example-inference-01.jpg' },
     },
     {
       example: '예시 02',
-      label: { title: '라벨링 사진', placeholder: '/presentation/ai-report-round4/yolov8s_label_02.png' },
-      inference: { title: '추론 사진', placeholder: '/presentation/ai-report-round4/yolov8s_label_02.png' },
+      label: { title: '라벨링 사진', src: '/presentation/ai-report-round4/yolov8s_label_02.jpg' },
+      inference: { title: '추론 사진', src: '/presentation/ai-report-round4/yolov8s-example-inference-02.jpg' },
     },
   ],
   'yolov11s-r4': [
     {
       example: '예시 01',
-      label: { title: '라벨링 사진', placeholder: '/presentation/ai-report-round4/yolo11s_label_01.png' },
-      inference: { title: '추론 사진', placeholder: '/presentation/ai-report-round4/yolo11s_label_01.png' },
+      label: { title: '라벨링 사진', src: '/presentation/ai-report-round4/yolo11s_label_01.jpg' },
+      inference: { title: '추론 사진', src: '/presentation/ai-report-round4/yolo11s-example-inference-01.jpg' },
     },
     {
       example: '예시 02',
-      label: { title: '라벨링 사진', placeholder: '/presentation/ai-report-round4/yolo11s_label_02.png' },
-      inference: { title: '추론 사진', placeholder: '/presentation/ai-report-round4/yolo11s_label_02.png' },
+      label: { title: '라벨링 사진', src: '/presentation/ai-report-round4/yolo11s_label_02.jpg' },
+      inference: { title: '추론 사진', src: '/presentation/ai-report-round4/yolo11s-example-inference-02.jpg' },
     },
   ],
 };

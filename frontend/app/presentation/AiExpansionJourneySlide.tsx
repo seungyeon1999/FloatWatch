@@ -44,18 +44,46 @@ const rounds: ExperimentRound[] = [
     label: '세 번째 학습',
     title: '취약 클래스 집중 보강',
     summary: '혼동행렬 기반 미탐지 보완과 반복 학습으로 Recall 90% 이상 검증',
-    dataset: '2차 혼동행렬 기준 취약 표본 보강\nRope·Styrofoam Piece·배경 오탐 집중 점검',
+    dataset: 'YOLO26s 3차 신규 학습\nRT-DETR-L은 2차 학습 결과 재사용',
     classFocus: 'Rope 87% · Styrofoam Piece 82% 취약 구간 개선',
     basisTitle: '2차 학습에서 확인한 한계',
     basis: '• RT-DETR-L Recall은 88.63%로 목표 90%에 근접\n• Rope와 Styrofoam Piece의 미탐지·혼동 잔존',
     actionTitle: '3차 학습 반영 내용',
     action: '• 취약 클래스 표본 추가 및 라벨 재점검\n• 배경으로 누락된 객체와 유사 배경의 오탐 사례 보강\n• 동일 조건 다중 Seed 학습으로 성능 재현성 검증',
-    params: '2차 최적 조건 기준 · 800px · Batch 4\n다중 Seed 반복 학습 · 조기 종료 비교',
-    augment: '취약 클래스 중심 선택 증강\n과도한 변형 축소 · 유사 배경 표본 추가',
-    metrics: { precision: 'TODO / TODO', recall: 'TODO / TODO', map50: 'TODO / TODO', map95: 'TODO / TODO' },
+    params: 'YOLO26s · 800px · Batch 4 · 140 Epoch\nAdamW · lr 0.0003 · wd 0.0005 · Patience 35 · cls 0.7',
+    augment: 'YOLO26s · Mosaic 0.75 · MixUp 0.05 · Close 15\nDeg 7 · Translate 0.15 · Scale 0.45 · Shear 2\nRT-DETR-L · 2차 설정 800px · Batch 4 · 100 Epoch 유지',
+    metrics: { precision: '93.67% / 91.50%', recall: '90.07% / 88.63%', map50: '94.77% / 92.95%', map95: '83.70% / 75.28%' },
     assets: [
-      { model: 'YOLO26s', chart: '/presentation/ai-iteration-expansion-round3/yolo26s/TODO-results.png', photo: '/presentation/ai-iteration-expansion-round3/yolo26s/TODO-val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-expansion-round3/yolo26s/TODO-confusion_matrix_normalized.png' },
-      { model: 'RT-DETR-L', chart: '/presentation/ai-iteration-expansion-round3/rtdetr-l/TODO-results.png', photo: '/presentation/ai-iteration-expansion-round3/rtdetr-l/TODO-val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-expansion-round3/rtdetr-l/TODO-confusion_matrix_normalized.png' },
+      {
+        model: 'YOLO26s',
+        charts: [
+          { src: '/presentation/ai-iteration-round3/yolo26s-pr.png', label: 'PR' },
+          { src: '/presentation/ai-iteration-round3/yolo26s-f1.png', label: 'F1' },
+        ],
+        photos: [
+          { src: '/presentation/ai-iteration-round3/yolo26s_label_01.jpg', label: '탐지 01' },
+          { src: '/presentation/ai-iteration-round3/yolo26s_label_02.jpg', label: '탐지 02' },
+        ],
+        matrices: [
+          { src: '/presentation/ai-iteration-round3/confusion_matrix.png', label: 'Confusion' },
+          { src: '/presentation/ai-iteration-round3/confusion_matrix_normalized.png', label: 'Normalized' },
+        ],
+      },
+      {
+        model: 'RT-DETR-L',
+        charts: [
+          { src: '/presentation/ai-report-round2/rtdetr-pr.png', label: 'PR' },
+          { src: '/presentation/ai-report-round2/rtdetr-f1.png', label: 'F1' },
+        ],
+        photos: [
+          { src: '/presentation/ai-report-round2/rtdetr-labels.jpg', label: '라벨' },
+          { src: '/presentation/ai-report-round2/rtdetr-pred.jpg', label: '예측' },
+        ],
+        matrices: [
+          { src: '/presentation/ai-report-round2/rtdetr-confusion.png', label: 'Confusion' },
+          { src: '/presentation/ai-report-round2/rtdetr-confusion-normalized.png', label: 'Normalized' },
+        ],
+      },
     ],
   },
 ];

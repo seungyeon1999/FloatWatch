@@ -10,6 +10,9 @@ export type ResultAsset = {
   chart?: string;
   photo?: string;
   matrix?: string;
+  charts?: { src: string; label: string }[];
+  photos?: { src: string; label: string }[];
+  matrices?: { src: string; label: string }[];
 };
 
 export type ExperimentRound = {
@@ -109,10 +112,26 @@ const defaultRounds: ExperimentRound[] = [
     action: '• 취약 클래스 미탐지 표본 추가 및 라벨 재점검\n• 과도한 증강을 줄여 일반화 성능 확인\n• 다중 Seed 반복 학습으로 재현성 검증',
     params: '3차 최적 조건을 기준으로 고정\n동일 조건 다중 Seed 반복 학습',
     augment: '취약 클래스 중심 선택 증강\n과도한 변형은 축소해 일반화 검증',
-    metrics: { precision: 'TODO / TODO', recall: 'TODO / TODO', map50: 'TODO / TODO', map95: 'TODO / TODO' },
+    metrics: { precision: '93.35% / 94.18%', recall: '91.05% / 90.22%', map50: '95.09% / 95.12%', map95: '82.88% / 84.00%' },
     assets: [
-      { model: 'YOLOv8s', chart: '/presentation/ai-iteration-round4/yolov8s/results.png', photo: '/presentation/ai-iteration-round4/yolov8s/val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-round4/yolov8s/confusion_matrix_normalized.png' },
-      { model: 'YOLO11s', chart: '/presentation/ai-iteration-round4/yolov11s/results.png', photo: '/presentation/ai-iteration-round4/yolov11s/val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-round4/yolov11s/confusion_matrix_normalized.png' },
+      {
+        model: 'YOLOv8s',
+        chart: '/presentation/ai-report-round4/yolov8s_results.png',
+        photos: [
+          { src: '/presentation/ai-report-round4/yolov8s-example-inference-01.jpg', label: '추론 01' },
+          { src: '/presentation/ai-report-round4/yolov8s-example-inference-02.jpg', label: '추론 02' },
+        ],
+        matrix: '/presentation/ai-report-round4/yolov8s-confusion.png',
+      },
+      {
+        model: 'YOLO11s',
+        chart: '/presentation/ai-report-round4/yolo11s_results.png',
+        photos: [
+          { src: '/presentation/ai-report-round4/yolo11s-example-inference-01.jpg', label: '추론 01' },
+          { src: '/presentation/ai-report-round4/yolo11s-example-inference-02.jpg', label: '추론 02' },
+        ],
+        matrix: '/presentation/ai-report-round4/yolov11s-confusion.png',
+      },
     ],
   },
 ];
@@ -120,6 +139,19 @@ const defaultRounds: ExperimentRound[] = [
 const metricValues = (value: string) => {
   const values = value.split(' / ');
   return values.length === 2 ? values : [value, value];
+};
+
+const resultImages = (asset: ResultAsset, view: ResultView) => {
+  if (view === 'charts')
+    return asset.charts ?? (asset.chart ? [{ src: asset.chart, label: '그래프' }] : []);
+
+  if (view === 'photos')
+    return asset.photos ?? (asset.photo ? [{ src: asset.photo, label: '예측 사진' }] : []);
+
+  if (view === 'matrix')
+    return asset.matrices ?? (asset.matrix ? [{ src: asset.matrix, label: '혼동 행렬' }] : []);
+
+  return [];
 };
 
 export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageNumber, modelNames, defaultIndex = 0 }: {
@@ -135,9 +167,9 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
   const [resultView, setResultView] = useState<ResultView>('details');
   const [expandedImage, setExpandedImage] = useState<{ src: string; model: string; label: string } | null>(null);
   const selectedRound = rounds[selectedIndex];
-  const hasCharts = selectedRound.assets?.some((asset) => asset.chart) ?? false;
-  const hasPhotos = selectedRound.assets?.some((asset) => asset.photo) ?? false;
-  const hasMatrices = selectedRound.assets?.some((asset) => asset.matrix) ?? false;
+  const hasCharts = selectedRound.assets?.some((asset) => resultImages(asset, 'charts').length > 0) ?? false;
+  const hasPhotos = selectedRound.assets?.some((asset) => resultImages(asset, 'photos').length > 0) ?? false;
+  const hasMatrices = selectedRound.assets?.some((asset) => resultImages(asset, 'matrix').length > 0) ?? false;
   const completedRatio = Math.round((rounds.filter((round) => !round.next && !round.partial).length / rounds.length) * 100);
   const selectRound = (index: number) => {
     setSelectedIndex(index);
@@ -213,11 +245,11 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
               </div>
             </div> : selectedRound.assets && <div style={{ display: 'grid', gridTemplateColumns: `repeat(${selectedRound.assets.length},1fr)`, gap: 14, height: 295 }}>
               {selectedRound.assets.map((asset) => {
-                const imageSrc = resultView === 'charts' ? asset.chart : resultView === 'photos' ? asset.photo : asset.matrix;
+                const images = resultImages(asset, resultView);
                 const imageLabel = resultView === 'charts' ? '그래프' : resultView === 'photos' ? '예측 사진' : '혼동 행렬';
-                return <figure key={asset.model} onClick={() => imageSrc && setExpandedImage({ src: imageSrc, model: asset.model, label: imageLabel })} style={{ display: 'grid', gridTemplateRows: '38px 1fr', minWidth: 0, minHeight: 0, margin: 0, overflow: 'hidden', border: '1px solid #cbd8dc', borderRadius: 10, background: '#fff', cursor: imageSrc ? 'zoom-in' : 'default' }}>
+                return <figure key={asset.model} style={{ display: 'grid', gridTemplateRows: '38px 1fr', minWidth: 0, minHeight: 0, margin: 0, overflow: 'hidden', border: '1px solid #cbd8dc', borderRadius: 10, background: '#fff' }}>
                   <figcaption style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', borderBottom: '1px solid #d8e1e3' }}><strong style={{ color: '#183741', fontSize: 15 }}>{asset.model}</strong><span style={{ color: '#718388', fontSize: 9, fontWeight: 900 }}>{resultView === 'charts' ? 'TRAINING RESULT' : resultView === 'photos' ? 'MODEL PREDICTION' : 'NORMALIZED MATRIX'}</span></figcaption>
-                  <div style={{ position: 'relative', minWidth: 0, minHeight: 0, display: 'grid', placeItems: 'center', padding: 8, background: resultView === 'photos' ? '#13272e' : '#fff' }}>{imageSrc ? <><img src={imageSrc} alt={`${selectedRound.label} ${asset.model} ${imageLabel}`} style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}/><span style={{ position: 'absolute', right: 12, bottom: 12, padding: '5px 8px', borderRadius: 7, background: 'rgba(20,43,52,.82)', color: '#fff', fontSize: 10, fontWeight: 900 }}>클릭하여 확대</span></> : <div style={{ textAlign: 'center', color: resultView === 'photos' ? '#cad8db' : '#6f8589' }}><strong style={{ display: 'block', fontSize: 16 }}>결과 추가 예정</strong><span style={{ display: 'block', marginTop: 7, fontSize: 11.5, fontWeight: 750 }}>{asset.model} 2차 학습 자료 대기 중</span></div>}</div>
+                  <div style={{ position: 'relative', minWidth: 0, minHeight: 0, display: 'grid', gridTemplateColumns: `repeat(${Math.max(images.length, 1)},1fr)`, gap: 8, placeItems: 'center', padding: 8, background: resultView === 'photos' ? '#13272e' : '#fff' }}>{images.length ? images.map((image) => <div key={image.src} onClick={() => setExpandedImage({ src: image.src, model: asset.model, label: image.label })} style={{ position: 'relative', width: '100%', height: '100%', minWidth: 0, minHeight: 0, cursor: 'zoom-in' }}><img src={image.src} alt={`${selectedRound.label} ${asset.model} ${image.label}`} style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}/><span style={{ position: 'absolute', left: 7, top: 7, padding: '4px 7px', borderRadius: 6, background: 'rgba(20,43,52,.82)', color: '#fff', fontSize: 9.5, fontWeight: 900 }}>{image.label}</span></div>) : <div style={{ textAlign: 'center', color: resultView === 'photos' ? '#cad8db' : '#6f8589' }}><strong style={{ display: 'block', fontSize: 16 }}>결과 추가 예정</strong><span style={{ display: 'block', marginTop: 7, fontSize: 11.5, fontWeight: 750 }}>{asset.model} 2차 학습 자료 대기 중</span></div>}</div>
                 </figure>;
               })}
             </div>}
