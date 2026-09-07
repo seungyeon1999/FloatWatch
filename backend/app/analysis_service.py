@@ -49,7 +49,7 @@ CLASS_CONFIDENCE_THRESHOLDS = {
 
 YOLO26S_CLASS_CONFIDENCE_THRESHOLDS = {
     "glass": 0.30,
-    "metal": 0.25,
+    "metal": 0.35,
     "net": 0.35,
     "pet_bottle": 0.35,
     "plastic_buoy": 0.65,
