@@ -1,12 +1,16 @@
+from types import SimpleNamespace
+
 import cv2
 import numpy as np
 
 from app.analysis_service import (
+    CLASS_CONFIDENCE_THRESHOLDS,
     NET_MIN_CONFIDENCE,
     OpticalFlowBoxTracker,
     TemporalDetectionFilter,
     class_confidence_indices,
     draw_tracked_boxes,
+    representative_image_predict_options,
 )
 
 
@@ -22,6 +26,33 @@ def test_user_threshold_overrides_net_minimum_when_higher():
     kept = class_confidence_indices([0], [0.70], {0: "Net"}, 0.75)
 
     assert kept == []
+
+
+def test_representative_image_thresholds_apply_per_class():
+    names = {0: "Glass", 1: "Plastic_Buoy", 2: "Net", 3: "Styrofoam Piece"}
+
+    kept = class_confidence_indices(
+        [0, 0, 1, 1, 2, 2, 3, 3],
+        [0.34, 0.35, 0.74, 0.75, 0.39, 0.40, 0.49, 0.50],
+        names,
+        0.10,
+        CLASS_CONFIDENCE_THRESHOLDS,
+    )
+
+    assert kept == [1, 3, 5, 7]
+
+
+def test_representative_image_predict_options_select_model_specific_size():
+    assert representative_image_predict_options(SimpleNamespace(model_key="yolov8s", is_representative=True)) == {
+        "conf": 0.10,
+        "iou": 0.40,
+        "imgsz": 800,
+        "max_det": 300,
+    }
+    assert representative_image_predict_options(SimpleNamespace(model_key="yolov11s", is_representative=True))["imgsz"] == 1280
+    assert representative_image_predict_options(SimpleNamespace(model_key="yolov26s", is_representative=True))["imgsz"] == 960
+    assert representative_image_predict_options(SimpleNamespace(model_key="rt-detr", is_representative=True)) is None
+    assert representative_image_predict_options(SimpleNamespace(model_key="yolov8s", is_representative=False)) is None
 
 
 def test_temporal_filter_requires_three_consecutive_overlapping_detections():

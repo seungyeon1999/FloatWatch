@@ -21,6 +21,27 @@ from .models import Analysis, ClassStat, FrameMetric
 from .storage_security import ensure_within_storage, storage_path
 
 NET_MIN_CONFIDENCE = 0.60
+REPRESENTATIVE_IMAGE_RAW_CONFIDENCE = 0.10
+REPRESENTATIVE_IMAGE_NMS_IOU = 0.40
+REPRESENTATIVE_IMAGE_MAX_DETECTIONS = 300
+REPRESENTATIVE_IMAGE_SIZES = {
+    "yolov8s": 800,
+    "yolov11s": 1280,
+    "yolov26s": 960,
+}
+CLASS_CONFIDENCE_THRESHOLDS = {
+    "glass": 0.35,
+    "metal": 0.30,
+    "net": 0.40,
+    "pet_bottle": 0.40,
+    "plastic_buoy": 0.75,
+    "plastic_buoy_china": 0.55,
+    "plastic_etc": 0.50,
+    "rope": 0.40,
+    "styrofoam_box": 0.50,
+    "styrofoam_buoy": 0.45,
+    "styrofoam_piece": 0.50,
+}
 TEMPORAL_MIN_CONSECUTIVE_FRAMES = 2
 TEMPORAL_IOU_THRESHOLD = 0.18
 TRACKING_MAX_MISSED_PROCESSED_FRAMES = 5
@@ -128,15 +149,37 @@ def class_confidence_indices(
     confidences: list[float],
     names: dict[int, str],
     base_confidence: float,
+    class_thresholds: dict[str, float] | None = None,
 ) -> list[int]:
-    """Apply the user threshold to every class and a stricter threshold to Net."""
+    """Apply confidence filtering, optionally using class-specific thresholds."""
     kept: list[int] = []
     for index, (class_id, confidence) in enumerate(zip(class_ids, confidences)):
-        class_name = str(names.get(class_id, class_id)).strip().casefold()
-        threshold = max(base_confidence, NET_MIN_CONFIDENCE) if class_name == "net" else base_confidence
+        class_name = normalize_class_name(names.get(class_id, class_id))
+        if class_thresholds is not None:
+            threshold = class_thresholds.get(class_name, base_confidence)
+        else:
+            threshold = max(base_confidence, NET_MIN_CONFIDENCE) if class_name == "net" else base_confidence
         if confidence >= threshold:
             kept.append(index)
     return kept
+
+
+def normalize_class_name(value: object) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(value).strip().casefold()).strip("_")
+
+
+def representative_image_predict_options(model_artifact: object) -> dict[str, int | float] | None:
+    if not bool(getattr(model_artifact, "is_representative", False)):
+        return None
+    image_size = REPRESENTATIVE_IMAGE_SIZES.get(str(getattr(model_artifact, "model_key", "") or ""))
+    if image_size is None:
+        return None
+    return {
+        "conf": REPRESENTATIVE_IMAGE_RAW_CONFIDENCE,
+        "iou": REPRESENTATIVE_IMAGE_NMS_IOU,
+        "imgsz": image_size,
+        "max_det": REPRESENTATIVE_IMAGE_MAX_DETECTIONS,
+    }
 
 
 def box_iou(left: tuple[float, float, float, float], right: tuple[float, float, float, float]) -> float:
@@ -494,7 +537,13 @@ def run_analysis(analysis_id: int) -> None:
             advance_progress(analysis, 25)
             db.commit()
             started = time.perf_counter()
-            result = model.predict(frame, conf=analysis.confidence, device=INFERENCE_DEVICE, verbose=False)[0]
+            image_predict_options = representative_image_predict_options(analysis.model)
+            predict_options = {"conf": analysis.confidence}
+            class_thresholds = None
+            if image_predict_options is not None:
+                predict_options.update(image_predict_options)
+                class_thresholds = CLASS_CONFIDENCE_THRESHOLDS
+            result = model.predict(frame, **predict_options, device=INFERENCE_DEVICE, verbose=False)[0]
             ensure_runtime_budget()
             db.refresh(analysis)
             if analysis.status != "processing":
@@ -505,7 +554,7 @@ def run_analysis(analysis_id: int) -> None:
             boxes = result.boxes
             raw_confidences = boxes.conf.cpu().tolist() if boxes is not None else []
             raw_class_ids = [int(value) for value in boxes.cls.cpu().tolist()] if boxes is not None else []
-            result = filter_result(result, class_confidence_indices(raw_class_ids, raw_confidences, names, analysis.confidence))
+            result = filter_result(result, class_confidence_indices(raw_class_ids, raw_confidences, names, analysis.confidence, class_thresholds))
             output_path = storage_path(STORAGE_DIR, "outputs", f"analysis-{analysis.id}.jpg")
             output_path.parent.mkdir(parents=True, exist_ok=True)
             advance_progress(analysis, 92)
