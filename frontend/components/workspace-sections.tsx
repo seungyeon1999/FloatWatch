@@ -436,10 +436,22 @@ function AdminConsole({ onNavigate }: { onNavigate?: (view: WorkspaceView) => vo
     } finally { setDeleteBusy(false); }
   }
   async function confirmDeleteAllRecords() {
-    if (deleteBusy || !records.length) return;
-    const ids = records.map((item) => item.id);
+    if (deleteBusy) return;
     setDeleteBusy(true); setDeleteError("");
     try {
+      const items: (Analysis & { owner: { id: number; name: string } })[] = [];
+      let page = 1;
+      let pages = 1;
+      do {
+        const result = await api<AdminPage<Analysis & { owner: { id: number; name: string } }>>(`/admin/analyses-page?page=${page}&page_size=100&status=all`);
+        items.push(...result.items);
+        pages = result.pages;
+        page += 1;
+      } while (page <= pages);
+      if (items.some((item) => item.status === "queued" || item.status === "processing")) {
+        throw new Error("진행 중인 분석은 삭제할 수 없습니다.");
+      }
+      const ids = items.map((item) => item.id);
       for (const id of ids) {
         await api(`/admin/analyses/${id}`, { method: "DELETE" });
       }
@@ -542,8 +554,9 @@ function AdminAnalysisLog({ records, total, counts, filter, page, onPageChange, 
     { value: "failed", label: "시스템 실패" }, { value: "cancelled", label: "사용자 중단" },
   ];
   return <><nav className="admin-record-type-tabs" aria-label="분석 기록 유형"><button type="button" className={recordType === "upload" ? "active" : ""} onClick={() => setRecordType("upload")}><strong>업로드 분석</strong><small>파일 기반 분석 결과</small></button><button type="button" className={recordType === "realtime" ? "active" : ""} onClick={() => setRecordType("realtime")}><strong>실시간 탐지</strong><small>시작부터 종료까지 세션 기록</small></button></nav>{recordType === "realtime" ? <AdminRealtimeDemo/> : <section className="admin-log-panel admin-analysis-log">
-    <header><div><strong>분석 기록</strong><span>오류 원인별로 전체 사용자의 분석 이력을 확인합니다.</span></div><p>실패 통계 <b>{counts.failed}건</b><small>사용자 중단 제외</small></p><button type="button" className="danger-button" disabled={deleteBusy || !paginated.length} onClick={onDeleteAll}><Trash2 size={14}/>전체 삭제</button></header>
+    <header><div><strong>분석 기록</strong><span>오류 원인별로 전체 사용자의 분석 이력을 확인합니다.</span></div><p>실패 통계 <b>{counts.failed}건</b><small>사용자 중단 제외</small></p></header>
     <nav className="admin-analysis-filters" aria-label="분석 상태 필터"><span className="admin-analysis-filter-label">처리 상태</span><div>{filters.map((item) => <button key={item.value} type="button" className={filter === item.value ? "active" : ""} onClick={() => onFilterChange(item.value)}><span>{item.label}</span><b>{counts[item.value]}</b></button>)}</div></nav>
+    <div className="admin-analysis-actions"><button type="button" className="danger-button" disabled={deleteBusy || counts.all === 0} onClick={onDeleteAll}><Trash2 size={14}/>전체 삭제</button></div>
     <div className="admin-table admin-analysis-table"><div className="admin-row record head"><span>사용자</span><span>분석 미디어</span><span>적용 모델</span><span>상태·원인</span><span>관리</span></div>{paginated.map((item) => {
       const effectiveStatus = effectiveAnalysisStatus(item.status, item.error_code);
       const cancelled = effectiveStatus === "cancelled";
