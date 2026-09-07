@@ -1933,7 +1933,7 @@ input:focus, select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgb
 .admin-analysis-log > header { justify-content: space-between; align-items: center; }
 .admin-analysis-log > header > div { display: flex; align-items: baseline; gap: 12px; }
 .admin-analysis-log > header > div strong { font-size: 13px; }
-.admin-analysis-log > header > div span { color: var(--muted); font-size: 10px; }
+.admin-analysis-log > header > div span { color: var(--muted); font-size: 14px; }
 .admin-analysis-log > header > p { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--muted); font-size: 9px; }
 .admin-analysis-log > header > p b { color: #ff8d69; font-size: 13px; }
 .admin-analysis-log > header > p small { padding-left: 7px; border-left: 1px solid rgba(205,235,232,.22); font-size: 8px; }

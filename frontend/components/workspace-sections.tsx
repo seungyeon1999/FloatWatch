@@ -347,6 +347,7 @@ function AdminConsole({ onNavigate }: { onNavigate?: (view: WorkspaceView) => vo
   const [inquiryBusy, setInquiryBusy] = useState(false);
   const [inquiryFeedback, setInquiryFeedback] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<(Analysis & { owner: { id: number; name: string } }) | null>(null);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [adminListLoading, setAdminListLoading] = useState(false);
@@ -419,6 +420,10 @@ function AdminConsole({ onNavigate }: { onNavigate?: (view: WorkspaceView) => vo
     if (!target) return;
     setDeleteTarget(target); setDeleteError("");
   }
+  function deleteAllRecords() {
+    if (deleteBusy || !records.length) return;
+    setDeleteAllOpen(true); setDeleteError("");
+  }
   async function confirmDeleteRecord() {
     if (!deleteTarget || deleteBusy) return;
     setDeleteBusy(true); setDeleteError("");
@@ -428,6 +433,20 @@ function AdminConsole({ onNavigate }: { onNavigate?: (view: WorkspaceView) => vo
       await load();
     } catch (error) {
       setDeleteError(error instanceof Error ? error.message : "분석 기록을 삭제하지 못했습니다.");
+    } finally { setDeleteBusy(false); }
+  }
+  async function confirmDeleteAllRecords() {
+    if (deleteBusy || !records.length) return;
+    const ids = records.map((item) => item.id);
+    setDeleteBusy(true); setDeleteError("");
+    try {
+      for (const id of ids) {
+        await api(`/admin/analyses/${id}`, { method: "DELETE" });
+      }
+      setSelectedAnalysisId(null); setDeleteAllOpen(false);
+      await load();
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "전체 분석 기록을 삭제하지 못했습니다.");
     } finally { setDeleteBusy(false); }
   }
   async function answerInquiry(event: FormEvent<HTMLFormElement>) {
@@ -461,10 +480,11 @@ function AdminConsole({ onNavigate }: { onNavigate?: (view: WorkspaceView) => vo
     {renderedArea === "observation" ? <OperationsBriefingV2 onNavigate={onNavigate}/> : <><div className="admin-tabs"><button className={tab === "users" ? "active" : ""} onClick={() => setTab("users")}><UserCog size={17}/><span><strong>회원 관리</strong><small>권한 및 이용 상태</small></span></button><button className={tab === "records" ? "active" : ""} onClick={() => setTab("records")}><Video size={17}/><span><strong>로그 관리</strong><small>전체 분석 이력</small></span></button><button className={tab === "inquiries" ? "active" : ""} onClick={() => setTab("inquiries")}><MessageSquareText size={17}/><span><strong>1:1 문의 관리</strong><small>문의 확인 및 답변</small></span></button></div>
     {adminListError && <div className="admin-list-error" role="alert"><TriangleAlert size={17}/><span><strong>목록을 불러오지 못했습니다.</strong><small>{adminListError}</small></span><button type="button" onClick={() => void load()}>다시 시도</button></div>}
     {tab === "users" && <><div className="admin-table admin-users-table"><div className="admin-row head"><span>회원</span><span>이메일</span><span>권한</span><span>이용 상태</span><span>가입일</span></div>{paginatedUsers.map((item) => { const busy = updatingUserId === item.id; const locked = updatingUserId !== null; return <div className={`admin-row ${busy ? "updating" : ""}`} key={item.id}><strong className="admin-member-name">{item.name}</strong><span className="admin-email">{item.email}</span><div className="admin-role-control" aria-label={`${item.name} 권한`}><button type="button" className={item.role === "user" ? "active" : ""} disabled={locked} onClick={() => item.role !== "user" && updateUser(item, { role: "user" })}>일반</button><button type="button" className={item.role === "admin" ? "active" : ""} disabled={locked} onClick={() => item.role !== "admin" && updateUser(item, { role: "admin" })}>관리자</button></div><button type="button" className={`admin-state-switch ${item.active ? "on" : ""}`} disabled={locked} aria-pressed={item.active} onClick={() => updateUser(item, { active: !item.active })}><i><span/></i><b>{item.active ? "활성" : "이용 정지"}</b></button><time>{formatDate(item.created_at)}</time></div>})}{!users.length && <div className="admin-empty">등록된 회원이 없습니다.</div>}{usersTotal > 10 && <AdminPagination page={usersPage} total={usersTotal} onChange={setUsersPage}/>}</div>{userFeedback && <p className="admin-feedback" role="status">{userFeedback}</p>}</>}
-    {tab === "records" && <div className="admin-log-view">{selectedAnalysisId ? <main className="records-detail-page"><header className="records-detail-nav"><button type="button" onClick={() => setSelectedAnalysisId(null)}><ArrowLeft size={17}/>분석 기록 목록</button><span>ADMIN ANALYSIS REPORT · #{selectedAnalysisId}</span></header><div className="records-detail-content"><AnalysisDetail adminMode id={selectedAnalysisId} relatedAnalyses={records.filter((analysis) => { const target = records.find((candidate) => candidate.id === selectedAnalysisId); return target?.batch_id ? analysis.batch_id === target.batch_id : analysis.id === selectedAnalysisId; })} onUpdated={() => void load()}/></div></main> : <><nav className="admin-log-switch" aria-label="로그 종류"><button type="button" className={logView === "audit" ? "active" : ""} onClick={() => setLogView("audit")}><strong>감사 로그</strong><small>관리자 운영 작업</small></button><button type="button" className={logView === "analysis" ? "active" : ""} onClick={() => setLogView("analysis")}><strong>분석 기록</strong><small>전체 사용자 분석 이력</small></button></nav>{logView === "audit" ? <section className="admin-log-panel"><header><strong>관리자 감사 로그</strong><span>권한 변경, 계정 정지, 삭제 및 답변 이력</span></header><div className="admin-table"><div className="admin-row audit head"><span>수행 관리자</span><span>작업</span><span>대상</span><span>사유</span><span>수행 시간</span></div>{paginatedAuditLogs.map((item) => <div className="admin-row audit" key={item.id}><strong>{item.actor.name}</strong><span>{auditActionLabel(item.action)}</span><span>{item.target_label ?? `${item.target_type} #${item.target_id ?? "-"}`}</span><span>{item.reason}</span><time>{formatDateTime(item.created_at)}</time></div>)}{!auditLogs.length && <div className="admin-empty">기록된 관리자 작업이 없습니다.</div>}{auditLogsTotal > 10 && <AdminPagination page={logsPage} total={auditLogsTotal} onChange={setLogsPage}/>}</div></section> : <AdminAnalysisLog records={records} total={recordsTotal} counts={analysisCounts} filter={analysisLogFilter} page={logsPage} onPageChange={setLogsPage} onFilterChange={changeAnalysisLogFilter} onOpen={setSelectedAnalysisId} onDelete={deleteRecord}/>}</>}</div>}
+    {tab === "records" && <div className="admin-log-view">{selectedAnalysisId ? <main className="records-detail-page"><header className="records-detail-nav"><button type="button" onClick={() => setSelectedAnalysisId(null)}><ArrowLeft size={17}/>분석 기록 목록</button><span>ADMIN ANALYSIS REPORT · #{selectedAnalysisId}</span></header><div className="records-detail-content"><AnalysisDetail adminMode id={selectedAnalysisId} relatedAnalyses={records.filter((analysis) => { const target = records.find((candidate) => candidate.id === selectedAnalysisId); return target?.batch_id ? analysis.batch_id === target.batch_id : analysis.id === selectedAnalysisId; })} onUpdated={() => void load()}/></div></main> : <><nav className="admin-log-switch" aria-label="로그 종류"><button type="button" className={logView === "audit" ? "active" : ""} onClick={() => setLogView("audit")}><strong>감사 로그</strong><small>관리자 운영 작업</small></button><button type="button" className={logView === "analysis" ? "active" : ""} onClick={() => setLogView("analysis")}><strong>분석 기록</strong><small>전체 사용자 분석 이력</small></button></nav>{logView === "audit" ? <section className="admin-log-panel"><header><strong>관리자 감사 로그</strong><span>권한 변경, 계정 정지, 삭제 및 답변 이력</span></header><div className="admin-table"><div className="admin-row audit head"><span>수행 관리자</span><span>작업</span><span>대상</span><span>사유</span><span>수행 시간</span></div>{paginatedAuditLogs.map((item) => <div className="admin-row audit" key={item.id}><strong>{item.actor.name}</strong><span>{auditActionLabel(item.action)}</span><span>{item.target_label ?? `${item.target_type} #${item.target_id ?? "-"}`}</span><span>{item.reason}</span><time>{formatDateTime(item.created_at)}</time></div>)}{!auditLogs.length && <div className="admin-empty">기록된 관리자 작업이 없습니다.</div>}{auditLogsTotal > 10 && <AdminPagination page={logsPage} total={auditLogsTotal} onChange={setLogsPage}/>}</div></section> : <AdminAnalysisLog records={records} total={recordsTotal} counts={analysisCounts} filter={analysisLogFilter} page={logsPage} onPageChange={setLogsPage} onFilterChange={changeAnalysisLogFilter} onOpen={setSelectedAnalysisId} onDelete={deleteRecord} onDeleteAll={deleteAllRecords} deleteBusy={deleteBusy}/>}</>}</div>}
     {tab === "inquiries" && <section className="admin-inquiry-list"><header><div><strong>접수된 문의</strong><span>문의 내용을 확인하고 같은 화면에서 답변합니다.</span></div><b>{pendingInquiries}건 대기</b></header>{paginatedInquiries.map((item) => { const expanded = selectedInquiry?.id === item.id; return <article className={expanded ? "open" : ""} key={item.id}><button type="button" onClick={() => { setInquiryFeedback(""); setSelectedInquiry(expanded ? null : item); }}><span className={`status ${item.status === "answered" ? "completed" : "processing"}`}>{item.status === "answered" ? "답변 완료" : "접수"}</span><strong>{item.title}</strong><small>{item.user.name} · {item.user.email}</small><time>{formatDate(item.created_at)}</time><ChevronDown size={17}/></button>{expanded && <div className="admin-inquiry-detail"><div className="admin-inquiry-question"><small>문의 내용</small><p>{item.content}</p>{item.attachments?.length > 0 && <InquiryAttachments files={item.attachments}/>}</div><form onSubmit={answerInquiry}><label><span>관리자 답변</span><textarea name="answer" rows={6} required defaultValue={item.answer ?? ""} placeholder="회원에게 전달할 답변을 작성하세요."/></label>{inquiryFeedback && <p className="inquiry-feedback" role="status">{inquiryFeedback}</p>}<button className="primary-button" disabled={inquiryBusy}><Send size={15}/>{inquiryBusy ? "저장 중..." : item.answer ? "답변 수정" : "답변 등록"}</button></form></div>}</article> })}{!inquiries.length && <div className="admin-empty">접수된 문의가 없습니다.</div>}{inquiriesTotal > 10 && <AdminPagination page={inquiriesPage} total={inquiriesTotal} onChange={(page) => { setInquiriesPage(page); setSelectedInquiry(null); }}/>}</section>}</>}
     {userChangeTarget && <AdminUserChangeDialog target={userChangeTarget} reason={userChangeReason} busy={updatingUserId !== null} error={userChangeError} onReasonChange={setUserChangeReason} onClose={() => { if (updatingUserId === null) setUserChangeTarget(null); }} onConfirm={confirmUserChange}/>}
     {deleteTarget && <AdminDeleteAnalysisDialog item={deleteTarget} busy={deleteBusy} error={deleteError} onClose={() => { if (!deleteBusy) setDeleteTarget(null); }} onConfirm={confirmDeleteRecord}/>}
+    {deleteAllOpen && <AdminDeleteAllAnalysesDialog busy={deleteBusy} error={deleteError} onClose={() => { if (!deleteBusy) setDeleteAllOpen(false); }} onConfirm={confirmDeleteAllRecords}/>}
   </div></div>;
 }
 
@@ -476,6 +496,10 @@ function AdminUserChangeDialog({ target, reason, busy, error, onReasonChange, on
 
 function AdminDeleteAnalysisDialog({ item, busy, error, onClose, onConfirm }: { item: Analysis & { owner: { id: number; name: string } }; busy: boolean; error: string; onClose: () => void; onConfirm: () => void }) {
   return createPortal(<div className="record-delete-backdrop" role="presentation" onMouseDown={onClose}><section className="record-delete-modal admin-record-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="admin-delete-record-title" onMouseDown={(event) => event.stopPropagation()}><span><Trash2 size={23}/></span><p className="section-kicker">DELETE ANALYSIS</p><h2 id="admin-delete-record-title">삭제 확인</h2><p>{item.video.name} 파일의 {item.model.name} 분석 기록을 삭제하시겠습니까?<br/>삭제한 분석 기록과 결과 파일은 복구하기 어려울 수 있습니다.</p><div className="admin-delete-target"><small>분석 미디어</small><strong>{item.video.name}</strong><em>적용 모델 · {item.model.name}</em></div>{error && <p className="record-delete-error"><CircleHelp size={14}/>{error}</p>}<footer><button type="button" disabled={busy} onClick={onClose}>취소</button><button type="button" className="danger" disabled={busy} onClick={onConfirm}>{busy ? <><LoaderCircle className="spin" size={15}/>삭제 중...</> : "삭제"}</button></footer></section></div>, document.body);
+}
+
+function AdminDeleteAllAnalysesDialog({ busy, error, onClose, onConfirm }: { busy: boolean; error: string; onClose: () => void; onConfirm: () => void }) {
+  return createPortal(<div className="record-delete-backdrop" role="presentation" onMouseDown={onClose}><section className="record-delete-modal admin-record-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="admin-delete-all-records-title" onMouseDown={(event) => event.stopPropagation()}><span><Trash2 size={23}/></span><p className="section-kicker">DELETE ANALYSIS</p><h2 id="admin-delete-all-records-title">삭제 확인</h2><p>전체 분석 기록을 삭제하시겠습니까?</p>{error && <p className="record-delete-error"><CircleHelp size={14}/>{error}</p>}<footer><button type="button" disabled={busy} onClick={onClose}>취소</button><button type="button" className="danger" disabled={busy} onClick={onConfirm}>{busy ? <><LoaderCircle className="spin" size={15}/>삭제 중...</> : "삭제"}</button></footer></section></div>, document.body);
 }
 
 type AdminAnalysisLogFilter = "all" | "active" | "completed" | "failed" | "cancelled";
@@ -493,7 +517,7 @@ const analysisFailureMeta: Partial<Record<NonNullable<Analysis["error_code"]>, {
   INFERENCE_FAILED: { label: "추론 오류", message: "AI 추론 과정에서 문제가 발생했습니다." },
 };
 
-function AdminAnalysisLog({ records, total, counts, filter, page, onPageChange, onFilterChange, onOpen, onDelete }: {
+function AdminAnalysisLog({ records, total, counts, filter, page, onPageChange, onFilterChange, onOpen, onDelete, onDeleteAll, deleteBusy }: {
   records: (Analysis & { owner: { id: number; name: string } })[];
   total: number;
   counts: Record<AdminAnalysisLogFilter, number>;
@@ -503,6 +527,8 @@ function AdminAnalysisLog({ records, total, counts, filter, page, onPageChange, 
   onFilterChange: (value: AdminAnalysisLogFilter) => void;
   onOpen: (id: number) => void;
   onDelete: (id: number) => Promise<void>;
+  onDeleteAll: () => void;
+  deleteBusy: boolean;
 }) {
   const [recordType, setRecordType] = useState<"upload" | "realtime">("upload");
   const expandedId: number | null = null;
@@ -516,7 +542,7 @@ function AdminAnalysisLog({ records, total, counts, filter, page, onPageChange, 
     { value: "failed", label: "시스템 실패" }, { value: "cancelled", label: "사용자 중단" },
   ];
   return <><nav className="admin-record-type-tabs" aria-label="분석 기록 유형"><button type="button" className={recordType === "upload" ? "active" : ""} onClick={() => setRecordType("upload")}><strong>업로드 분석</strong><small>파일 기반 분석 결과</small></button><button type="button" className={recordType === "realtime" ? "active" : ""} onClick={() => setRecordType("realtime")}><strong>실시간 탐지</strong><small>시작부터 종료까지 세션 기록</small></button></nav>{recordType === "realtime" ? <AdminRealtimeDemo/> : <section className="admin-log-panel admin-analysis-log">
-    <header><div><strong>분석 기록</strong><span>오류 원인별로 전체 사용자의 분석 이력을 확인합니다.</span></div><p>실패 통계 <b>{counts.failed}건</b><small>사용자 중단 제외</small></p></header>
+    <header><div><strong>분석 기록</strong><span>오류 원인별로 전체 사용자의 분석 이력을 확인합니다.</span></div><p>실패 통계 <b>{counts.failed}건</b><small>사용자 중단 제외</small></p><button type="button" className="danger-button" disabled={deleteBusy || !paginated.length} onClick={onDeleteAll}><Trash2 size={14}/>전체 삭제</button></header>
     <nav className="admin-analysis-filters" aria-label="분석 상태 필터"><span className="admin-analysis-filter-label">처리 상태</span><div>{filters.map((item) => <button key={item.value} type="button" className={filter === item.value ? "active" : ""} onClick={() => onFilterChange(item.value)}><span>{item.label}</span><b>{counts[item.value]}</b></button>)}</div></nav>
     <div className="admin-table admin-analysis-table"><div className="admin-row record head"><span>사용자</span><span>분석 미디어</span><span>적용 모델</span><span>상태·원인</span><span>관리</span></div>{paginated.map((item) => {
       const effectiveStatus = effectiveAnalysisStatus(item.status, item.error_code);
