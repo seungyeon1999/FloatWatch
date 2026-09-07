@@ -33,17 +33,17 @@ REPRESENTATIVE_IMAGE_SIZES = {
     "yolov26s": 1280,
 }
 CLASS_CONFIDENCE_THRESHOLDS = {
-    "glass": 0.35,
-    "metal": 0.30,
-    "net": 0.40,
-    "pet_bottle": 0.40,
-    "plastic_buoy": 0.75,
-    "plastic_buoy_china": 0.55,
-    "plastic_etc": 0.50,
-    "rope": 0.40,
-    "styrofoam_box": 0.50,
-    "styrofoam_buoy": 0.45,
-    "styrofoam_piece": 0.50,
+    "glass": 0.30,
+    "metal": 0.25,
+    "net": 0.35,
+    "pet_bottle": 0.35,
+    "plastic_buoy": 0.65,
+    "plastic_buoy_china": 0.50,
+    "plastic_etc": 0.45,
+    "rope": 0.35,
+    "styrofoam_box": 0.45,
+    "styrofoam_buoy": 0.40,
+    "styrofoam_piece": 0.45,
 }
 TEMPORAL_MIN_CONSECUTIVE_FRAMES = 2
 TEMPORAL_IOU_THRESHOLD = 0.18
