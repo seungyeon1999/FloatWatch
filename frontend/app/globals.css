@@ -2899,7 +2899,7 @@ input:focus, select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgb
 }
 .analysis-center-shell .admin-tabs button + button { border-left: 1px solid rgba(205, 237, 233, .14); }
 .analysis-center-shell .admin-tabs button > span { display: grid; gap: 2px; text-align: left; }
-.analysis-center-shell .admin-tabs button strong { color: inherit; font-size: 12px; }
+.analysis-center-shell .admin-tabs button strong { color: inherit; font-size: 14px; }
 .analysis-center-shell .admin-tabs button small { color: #9fbfbc; font-size: 9px; font-weight: 500; }
 .analysis-center-shell .admin-tabs button:hover { background: rgba(224, 247, 244, .07); color: #effaf8; }
 .analysis-center-shell .admin-tabs button.active { border-bottom-color: #82d9d1; background: rgba(119, 214, 205, .1); color: #fff; }
