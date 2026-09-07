@@ -197,9 +197,22 @@ def normalize_class_name(value: object) -> str:
 def representative_image_predict_options(model_artifact: object) -> dict[str, int | float] | None:
     if not bool(getattr(model_artifact, "is_representative", False)):
         return None
-    image_size = REPRESENTATIVE_IMAGE_SIZES.get(str(getattr(model_artifact, "model_key", "") or ""))
+
+    model_key = str(getattr(model_artifact, "model_key", "") or "").lower()
+
+    if model_key == "yolov26s":
+        return {
+            "conf": 0.03,
+            "iou": 0.55,
+            "imgsz": 1536,
+            "max_det": 500,
+        }
+
+    image_size = REPRESENTATIVE_IMAGE_SIZES.get(model_key)
+
     if image_size is None:
         return None
+
     return {
         "conf": REPRESENTATIVE_IMAGE_RAW_CONFIDENCE,
         "iou": REPRESENTATIVE_IMAGE_NMS_IOU,
