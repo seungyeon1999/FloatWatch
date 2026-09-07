@@ -32,7 +32,22 @@ REPRESENTATIVE_IMAGE_SIZES = {
     "yolov11s": 1280,
     "yolov26s": 1280,
 }
+
 CLASS_CONFIDENCE_THRESHOLDS = {
+    "glass": 0.35,
+    "metal": 0.30,
+    "net": 0.40,
+    "pet_bottle": 0.40,
+    "plastic_buoy": 0.75,
+    "plastic_buoy_china": 0.55,
+    "plastic_etc": 0.50,
+    "rope": 0.40,
+    "styrofoam_box": 0.50,
+    "styrofoam_buoy": 0.45,
+    "styrofoam_piece": 0.50,
+}
+
+YOLO26S_CLASS_CONFIDENCE_THRESHOLDS = {
     "glass": 0.30,
     "metal": 0.25,
     "net": 0.35,
@@ -45,6 +60,7 @@ CLASS_CONFIDENCE_THRESHOLDS = {
     "styrofoam_buoy": 0.40,
     "styrofoam_piece": 0.45,
 }
+
 TEMPORAL_MIN_CONSECUTIVE_FRAMES = 2
 TEMPORAL_IOU_THRESHOLD = 0.18
 TRACKING_MAX_MISSED_PROCESSED_FRAMES = 5
@@ -741,6 +757,19 @@ def run_analysis(analysis_id: int) -> None:
             db.commit()
             started = time.perf_counter()
             image_predict_options = representative_image_predict_options(analysis.model)
+
+            predict_options = {"conf": analysis.confidence}
+            class_thresholds = None
+            model_key = str(analysis.model.model_key or "").lower()
+
+            if image_predict_options is not None:
+                predict_options.update(image_predict_options)
+
+                if model_key == "yolov26s":
+                    class_thresholds = YOLO26S_CLASS_CONFIDENCE_THRESHOLDS
+                else:
+                    class_thresholds = CLASS_CONFIDENCE_THRESHOLDS
+
             predict_options = {"conf": analysis.confidence}
             class_thresholds = None
             if image_predict_options is not None:
