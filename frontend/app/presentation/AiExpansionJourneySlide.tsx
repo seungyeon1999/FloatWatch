@@ -35,64 +35,8 @@ const rounds: ExperimentRound[] = [
     augment: '회전 10° · Scale 0.2 · Flip 0.2/0.5\nMosaic 1.0 · MixUp 0.1',
     metrics: { precision: '92.79% / 91.50%', recall: '87.88% / 88.63%', map50: '93.67% / 92.95%', map95: '81.35% / 75.28%' },
     assets: [
-      {
-        model: 'YOLO26s',
-        charts: [
-          {
-            src: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/results.png',
-            label: 'Training Result',
-          },
-        ],
-        photos: [
-          {
-            src: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/labels.jpg',
-            label: '라벨',
-          },
-          {
-            src: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/val_batch0_pred.jpg',
-            label: '예측',
-          },
-        ],
-        matrices: [
-          {
-            src: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/confusion_matrix.png',
-            label: 'Confusion',
-          },
-          {
-            src: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/confusion_matrix_normalized.png',
-            label: 'Normalized',
-          },
-        ],
-      },
-      {
-        model: 'RT-DETR-L',
-        charts: [
-          {
-            src: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/results.png',
-            label: 'Training Result',
-          },
-        ],
-        photos: [
-          {
-            src: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/labels.jpg',
-            label: '라벨',
-          },
-          {
-            src: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/val_batch0_pred.jpg',
-            label: '예측',
-          },
-        ],
-        matrices: [
-          {
-            src: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/confusion_matrix.png',
-            label: 'Confusion',
-          },
-          {
-            src: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/confusion_matrix_normalized.png',
-            label: 'Normalized',
-          },
-        ],
-      },
+      { model: 'YOLO26s', chart: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/results.png', photo: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-expansion-round2/yolo26s_target90-3/confusion_matrix_normalized.png' },
+      { model: 'RT-DETR-L', chart: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/results.png', photo: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/val_batch0_pred.jpg', matrix: '/presentation/ai-iteration-expansion-round2/rtdetr-l_edge-2/confusion_matrix_normalized.png' },
     ],
   },
   {
@@ -110,34 +54,8 @@ const rounds: ExperimentRound[] = [
     augment: 'YOLO26s · Mosaic 0.75 · MixUp 0.05 · Close 15\nDeg 7 · Translate 0.15 · Scale 0.45 · Shear 2\nRT-DETR-L · 2차 설정 800px · Batch 4 · 100 Epoch 유지',
     metrics: { precision: '93.67% / 91.50%', recall: '90.07% / 88.63%', map50: '94.77% / 92.95%', map95: '83.70% / 75.28%' },
     assets: [
-      {
-        model: 'YOLO26s',
-        charts: [
-          { src: '/presentation/ai-iteration-round3/yolo26s_results.png', label: 'Training Result' },
-        ],
-        photos: [
-          { src: '/presentation/ai-iteration-round3/yolo26s_label_01.jpg', label: '탐지 01' },
-          { src: '/presentation/ai-iteration-round3/yolo26s_label_02.jpg', label: '탐지 02' },
-        ],
-        matrices: [
-          { src: '/presentation/ai-iteration-round3/confusion_matrix.png', label: 'Confusion' },
-          { src: '/presentation/ai-iteration-round3/confusion_matrix_normalized.png', label: 'Normalized' },
-        ],
-      },
-      {
-        model: 'RT-DETR-L',
-        charts: [
-          { src: '/presentation/ai-report-round2/rtdetr-results.png', label: 'Training Result' },
-        ],
-        photos: [
-          { src: '/presentation/ai-report-round2/rtdetr-labels.jpg', label: '라벨' },
-          { src: '/presentation/ai-report-round2/rtdetr-pred.jpg', label: '예측' },
-        ],
-        matrices: [
-          { src: '/presentation/ai-report-round2/rtdetr-confusion.png', label: 'Confusion' },
-          { src: '/presentation/ai-report-round2/rtdetr-confusion-normalized.png', label: 'Normalized' },
-        ],
-      },
+      { model: 'YOLO26s', chart: '/presentation/ai-iteration-round3/yolo26s_results.png', photo: '/presentation/ai-iteration-round3/yolo26s_label_01.jpg', matrix: '/presentation/ai-iteration-round3/confusion_matrix_normalized.png' },
+      { model: 'RT-DETR-L', chart: '/presentation/ai-report-round2/rtdetr-results.png', photo: '/presentation/ai-report-round2/rtdetr-pred.jpg', matrix: '/presentation/ai-report-round2/rtdetr-confusion-normalized.png' },
     ],
   },
 ];
