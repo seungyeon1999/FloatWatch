@@ -770,11 +770,6 @@ def run_analysis(analysis_id: int) -> None:
                 else:
                     class_thresholds = CLASS_CONFIDENCE_THRESHOLDS
 
-            predict_options = {"conf": analysis.confidence}
-            class_thresholds = None
-            if image_predict_options is not None:
-                predict_options.update(image_predict_options)
-                class_thresholds = CLASS_CONFIDENCE_THRESHOLDS
             logger.info(
                 "[IMAGE INFERENCE DEBUG] analysis_id=%s model_id=%s model_name=%s model_key=%s "
                 "is_representative=%s model_path=%s model_sha256=%s source_image_path=%s "
