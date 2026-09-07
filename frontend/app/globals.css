@@ -2909,7 +2909,7 @@ input:focus, select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgb
   border-bottom-color: rgba(211, 239, 235, .14);
   color: #d9eae7;
 }
-.analysis-center-shell .admin-row.head { background: rgba(2, 37, 41, .2); color: white; }
+.analysis-center-shell .admin-row.head { background: rgba(2, 37, 41, .2); color: white; font-size: 14px;}
 .analysis-center-shell .admin-row strong { color: #fff; font-size: 12px; }
 .analysis-center-shell .admin-row:not(.record) {
   grid-template-columns: minmax(145px, .72fr) minmax(210px, 1.15fr) 170px 132px 104px;
