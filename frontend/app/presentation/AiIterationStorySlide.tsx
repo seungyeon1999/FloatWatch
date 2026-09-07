@@ -176,7 +176,7 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
   return (
     <div className={styles.slide}>
       <div className={styles.logo}><span className={styles.logoMark}>Float</span><span className={styles.logoAccent}>W</span><span className={styles.logoText}>atch</span></div>
-      <div className={styles.content} style={{ justifyContent: 'flex-start', paddingTop: 86, paddingBottom: 28 }}>
+      <div className={styles.content} style={{ justifyContent: 'flex-start', paddingTop: 76, paddingBottom: 16 }}>
         <div className={styles.chapterBadge}>{chapter}</div>
         <h1 className={styles.slideTitle} style={{ marginBottom: 0 }}>{title}</h1>
         <p className={styles.slideSubtitle} style={{ margin: '7px 0 14px', maxWidth: 1240, color: '#344e4c', fontSize: 17, fontWeight: 700 }}>
@@ -188,7 +188,7 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
           <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${rounds.length},1fr)`, gap: 14 }}>
             {rounds.map((round, index) => {
               const selected = selectedIndex === index;
-              return <button key={round.no} data-nav="true" type="button" onClick={(event) => { event.stopPropagation(); selectRound(index); }} style={{ position: 'relative', height: 118, padding: '52px 18px 14px', textAlign: 'left', border: selected ? `2px solid ${round.next ? '#5f918d' : '#e56b3f'}` : '1px solid #cad8d9', borderRadius: 14, background: selected ? (round.next ? '#edf5f4' : '#fff5f0') : 'rgba(255,255,255,.78)', boxShadow: selected ? '0 10px 25px rgba(83,73,61,.12)' : 'none', cursor: 'pointer' }}>
+              return <button key={round.no} data-nav="true" type="button" onClick={(event) => { event.stopPropagation(); selectRound(index); }} style={{ position: 'relative', height: 104, padding: '44px 18px 12px', textAlign: 'left', border: selected ? `2px solid ${round.next ? '#5f918d' : '#e56b3f'}` : '1px solid #cad8d9', borderRadius: 14, background: selected ? (round.next ? '#edf5f4' : '#fff5f0') : 'rgba(255,255,255,.78)', boxShadow: selected ? '0 10px 25px rgba(83,73,61,.12)' : 'none', cursor: 'pointer' }}>
                 <span style={{ position: 'absolute', zIndex: 2, top: 10, left: 17, width: 34, height: 34, display: 'grid', placeItems: 'center', border: `4px solid ${round.next ? '#6d9996' : '#e56b3f'}`, borderRadius: '50%', background: selected ? (round.next ? '#edf5f4' : '#fff5f0') : '#f2f6f5', color: round.next ? '#376f6b' : '#cf542e', fontSize: 11, fontWeight: 950, boxShadow: '0 0 0 5px #f2f6f5' }}>{round.no}</span>
                 <span style={{ display: 'block', color: round.next || round.partial ? '#397773' : '#8a9a9d', fontSize: 10.5, fontWeight: 900, letterSpacing: .5 }}>{round.next ? 'NEXT · 예정' : round.partial ? 'IN PROGRESS · 진행 중' : 'TRAINING · 완료'}</span>
                 <strong style={{ display: 'block', marginTop: 5, color: '#142f31', fontSize: 20, lineHeight: 1.15, whiteSpace: 'nowrap' }}>{index + 1}차 학습</strong>
@@ -198,7 +198,7 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
           </div>
         </div>
 
-        <section data-nav="true" onClick={(event) => event.stopPropagation()} style={{ display: 'grid', gridTemplateColumns: '370px 1fr', width: '100%', height: 395, marginTop: 16, overflow: 'hidden', border: '1px solid #c8d7d8', borderRadius: 18, background: 'rgba(255,255,255,.92)', boxShadow: '0 16px 34px rgba(30,59,60,.09)' }}>
+        <section data-nav="true" onClick={(event) => event.stopPropagation()} style={{ display: 'grid', gridTemplateColumns: '370px 1fr', width: '100%', height: 382, marginTop: 12, overflow: 'hidden', border: '1px solid #c8d7d8', borderRadius: 18, background: 'rgba(255,255,255,.92)', boxShadow: '0 16px 34px rgba(30,59,60,.09)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', padding: '22px 29px 12px', boxSizing: 'border-box', background: selectedRound.next ? '#eaf3f2' : '#263f50', color: '#fff' }}>
             <small style={{ color: selectedRound.next ? '#397773' : '#ff9a74', fontSize: 12, fontWeight: 950, letterSpacing: 1.1 }}>{selectedRound.label} · {selectedRound.next ? 'NEXT EXPERIMENT' : 'SELECTED EXPERIMENT'}</small>
             <div style={{ height: 1, margin: '13px 0 5px', background: selectedRound.next ? '#bfd4d1' : 'rgba(255,255,255,.18)' }} />

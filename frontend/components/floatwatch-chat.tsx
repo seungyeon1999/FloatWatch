@@ -53,12 +53,12 @@ const guides: ChatGuide[] = [
   },
   {
     words: ["추천", "뭐부터", "처음", "처음이면", "먼저", "순서", "시작할까"],
-    text: "처음이라면 프로젝트 개요로 전체 흐름을 보고, 개발정보에서 MVP 구성을 확인한 뒤, 부유물 탐색에서 이미지나 동영상을 분석해보는 순서가 좋습니다. 웹캠 테스트가 필요하면 실시간 탐색으로 가면 됩니다.",
-    action: { label: "프로젝트 개요 보기", view: "overview" },
+    text: "처음 사용한다면 상단 메뉴에서 분석 센터 → 부유물 탐색으로 이동하세요. 메인페이지의 '영상 속 부유물을 탐지하세요' 영역이나 '분석 시작' 버튼을 눌러도 이동할 수 있습니다. 부유물 탐색 화면에서 새 미디어 또는 미디어 업로드를 눌러 이미지나 동영상을 등록한 뒤, 대표 PT 모델을 선택하고 최소 신뢰도와 프레임 간격 같은 탐지 설정을 확인합니다. 설정이 끝나면 분석을 시작하고, 완료된 결과는 탐색 기록이나 분석 결과 화면에서 확인하면 됩니다.",
+    action: { label: "부유물 탐색 열기", view: "analysis" },
   },
   {
     words: ["쉽게 설명", "쉽게 말해", "간단히", "짧게", "요약", "한 줄"],
-    text: "FloatWatch는 바다나 하천 영상에서 떠다니는 물체를 AI 모델로 찾아내고, 결과를 기록으로 정리해주는 서비스입니다. 이미지나 동영상을 넣으면 탐지 결과와 통계를 확인할 수 있어요.",
+    text: "FloatWatch는 드론과 CCTV 영상 속 부유물을 감지해 종류와 위치, 위험도를 실시간으로 분류하는 사이트입니다.",
     action: { label: "프로젝트 개요 보기", view: "overview" },
   },
   {
@@ -148,7 +148,7 @@ const guides: ChatGuide[] = [
   },
   {
     words: ["이미지 탐색", "이미지 분석", "사진 탐색", "사진 분석", "이미지 업로드", "사진 업로드", "jpg 분석", "png 분석"],
-    text: "이미지 탐색은 부유물 탐색에서 시작합니다. 분석할 JPG·PNG 같은 이미지와 학습된 YOLO PT 모델을 업로드하거나 선택한 뒤 신뢰도 기준을 정하고 분석 시작을 누르면 탐지 결과와 클래스 통계가 기록됩니다.",
+    text: "이미지 탐색은 상단 메뉴에서 분석 센터 → 부유물 탐색을 클릭하면 시작할 수 있습니다. 메인페이지의 '영상 속 부유물을 탐지하세요' 영역이나 '분석 시작' 버튼을 눌러도 부유물 탐색 화면으로 이동할 수 있습니다.",
     action: { label: "이미지 탐색 시작", view: "analysis" },
   },
   {
@@ -158,7 +158,7 @@ const guides: ChatGuide[] = [
   },
   {
     words: ["부유물 탐색", "분석 방법", "사용 방법", "어떻게 시작", "분석 시작", "탐색 시작", "사용법"],
-    text: "부유물 탐색에서는 이미지 또는 동영상과 학습된 YOLO PT 모델을 각각 업로드하거나 선택한 뒤 분석 시작 버튼을 누르면 됩니다. 완료된 결과는 탐색 기록에 자동 저장됩니다.",
+    text: "부유물 탐색 화면에서 '새 미디어' 또는 '미디어 업로드'를 클릭해 이미지를 업로드하세요. 이후 대표 PT 모델을 설정하고, 탐지 설정에서 최소 신뢰도와 프레임 간격을 지정한 뒤 분석을 시작하면 됩니다.",
     action: { label: "부유물 탐색 열기", view: "analysis" },
   },
   {
@@ -172,8 +172,8 @@ const guides: ChatGuide[] = [
     action: { label: "탐색 기록 보기", view: "records" },
   },
   {
-    words: ["비교", "모델별", "어떤 모델", "성능 비교"],
-    text: "탐색 기록의 상세 결과에서 네 모델의 탐지 개수, 평균 신뢰도와 처리 성능 차이를 한눈에 확인할 수 있습니다.",
+    words: ["비교", "모델별", "어떤 모델", "성능 비교", "yolov8s", "yolo11s", "두 모델"],
+    text: "YOLOv8s와 YOLO11s 결과 비교는 분석 센터의 탐색 기록에서 확인할 수 있습니다. 단, 분석 센터에서 이미지 탐색을 진행한 경우에 모델별 분석 결과를 비교할 수 있습니다. 완료된 탐색 기록을 열면 YOLOv8s와 YOLO11s 결과를 각각 선택해 탐지 결과와 신뢰도 등을 비교할 수 있습니다.",
     action: { label: "탐색 기록 보기", view: "records" },
   },
   {
@@ -257,9 +257,9 @@ function compactAnswer(value: string) {
   const text = stripHtml(value);
   const sentences = text.match(/[^.!?。]+[.!?。]?/g)?.map((item) => item.trim()).filter(Boolean) ?? [text];
   const concise = sentences.slice(0, 2).join(" ");
-  if (concise.length <= 145) return concise;
-  const shortened = concise.slice(0, 142);
+  if (concise.length <= 320) return concise;
+  const shortened = concise.slice(0, 317);
   const boundary = shortened.lastIndexOf(" ");
-  return `${shortened.slice(0, boundary > 90 ? boundary : 142).replace(/[.,!?]?$/, "")}…`;
+  return `${shortened.slice(0, boundary > 180 ? boundary : 317).replace(/[.,!?]?$/, "")}…`;
 }
 function scoreText(question: string, target: string) { const tokens = question.split(" ").filter((token) => token.length > 1); return tokens.reduce((score, token) => score + (target.includes(token) ? 1 : 0), 0); }
