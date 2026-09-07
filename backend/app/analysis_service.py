@@ -796,6 +796,27 @@ def run_analysis(analysis_id: int) -> None:
                 inference_environment_info(),
             )
             result = model.predict(frame, **predict_options, device=INFERENCE_DEVICE, verbose=False)[0]
+
+            logger.info(
+                "[RAW DETECTION DEBUG] model=%s names=%s",
+                analysis.model.name,
+                names,
+            )
+
+            if result.boxes is not None:
+                for box in result.boxes:
+                    cls_id = int(box.cls.item())
+                    conf_value = float(box.conf.item())
+                    cls_name = names.get(cls_id, str(cls_id))
+
+                    logger.info(
+                        "[RAW DETECTION DEBUG] model=%s cls_id=%d cls_name=%s conf=%.4f",
+                        analysis.model.name,
+                        cls_id,
+                        cls_name,
+                        conf_value,
+                    )
+
             ensure_runtime_budget()
             db.refresh(analysis)
             if analysis.status != "processing":
