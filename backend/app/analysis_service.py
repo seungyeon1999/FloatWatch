@@ -24,6 +24,19 @@ from .models import Analysis, ClassStat, FrameMetric
 from .storage_security import ensure_within_storage, storage_path
 
 NET_MIN_CONFIDENCE = 0.60
+CLASS_COLORS = {
+    0: (36, 108, 255),
+    1: (255, 88, 54),
+    2: (70, 170, 40),
+    3: (226, 43, 138),
+    4: (0, 154, 255),
+    5: (168, 70, 210),
+    6: (48, 200, 200),
+    7: (180, 120, 45),
+    8: (238, 176, 45),
+    9: (95, 65, 235),
+    10: (0, 110, 190),
+}
 REPRESENTATIVE_IMAGE_RAW_CONFIDENCE = 0.10
 REPRESENTATIVE_IMAGE_NMS_IOU = 0.40
 REPRESENTATIVE_IMAGE_MAX_DETECTIONS = 300
@@ -485,6 +498,10 @@ def clamp_label_rect(x: int, y: int, width: int, height: int, image_width: int, 
     return (x, y, min(image_width, x + width), min(image_height, y + height))
 
 
+def get_class_color(class_id: int) -> tuple[int, int, int]:
+    return CLASS_COLORS.get(class_id, CLASS_COLORS[class_id % len(CLASS_COLORS)])
+
+
 def place_label_rect(
     box: tuple[int, int, int, int],
     label_width: int,
@@ -495,16 +512,16 @@ def place_label_rect(
 ) -> tuple[int, int, int, int]:
     x1, y1, x2, y2 = box
     padding = 3
-    candidates = [
-        (x1, y1 - label_height),
-        (x1, y2),
-        (x1, y1 - label_height * 2 - padding),
-        (x1, y2 + label_height + padding),
-        (x1 + label_height, y1 - label_height),
-        (x2 - label_width, y1 - label_height),
-        (x1 + label_height, y2),
-        (x2 - label_width, y2),
-    ]
+    candidates: list[tuple[int, int]] = []
+    for offset in (0, label_height + padding, (label_height + padding) * 2, (label_height + padding) * 3):
+        candidates.extend([
+            (x1, y1 - label_height - offset),
+            (x1, y2 + offset),
+            (x2 + padding + offset, y1),
+            (x1 - label_width - padding - offset, y1),
+            (x2 + padding + offset, y2 - label_height),
+            (x1 - label_width - padding - offset, y2 - label_height),
+        ])
     for x, y in candidates:
         if y < 0 or y + label_height > image_height:
             continue
@@ -512,6 +529,19 @@ def place_label_rect(
         if not any(label_rectangles_overlap(rect, used) for used in used_label_rects):
             return rect
     return clamp_label_rect(x1, y1 - label_height, label_width, label_height, image_width, image_height)
+
+
+def closest_points_between_rectangles(
+    source: tuple[int, int, int, int],
+    target: tuple[int, int, int, int],
+) -> tuple[tuple[int, int], tuple[int, int]]:
+    sx1, sy1, sx2, sy2 = source
+    tx1, ty1, tx2, ty2 = target
+    source_x = max(sx1, min((tx1 + tx2) // 2, sx2))
+    source_y = max(sy1, min((ty1 + ty2) // 2, sy2))
+    target_x = max(tx1, min(source_x, tx2))
+    target_y = max(ty1, min(source_y, ty2))
+    return (source_x, source_y), (target_x, target_y)
 
 
 def draw_image_result_non_overlapping(frame: np.ndarray, result, names: dict[int, str]) -> np.ndarray:
@@ -525,8 +555,7 @@ def draw_image_result_non_overlapping(frame: np.ndarray, result, names: dict[int
     confidences = boxes.conf.cpu().tolist()
     class_ids = [int(value) for value in boxes.cls.cpu().tolist()]
     image_height, image_width = annotated.shape[:2]
-    color = (74, 211, 199)
-    text_color = (8, 32, 35)
+    text_color = (255, 255, 255)
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.5
     thickness = 1
@@ -538,6 +567,7 @@ def draw_image_result_non_overlapping(frame: np.ndarray, result, names: dict[int
         y1 = max(0, min(y1, max(0, image_height - 1)))
         x2 = max(0, min(x2, max(0, image_width - 1)))
         y2 = max(0, min(y2, max(0, image_height - 1)))
+        color = get_class_color(class_id)
         cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2, cv2.LINE_AA)
 
         label = f"{names.get(class_id, class_id)} {float(confidence):.2f}"
@@ -548,9 +578,13 @@ def draw_image_result_non_overlapping(frame: np.ndarray, result, names: dict[int
             (text_width, text_height), baseline = cv2.getTextSize(label, font, label_font_scale, thickness)
         label_width = min(image_width, text_width + 8)
         label_height = text_height + baseline + 6
+        default_label_rect = clamp_label_rect(x1, y1 - label_height, label_width, label_height, image_width, image_height)
         label_rect = place_label_rect((x1, y1, x2, y2), label_width, label_height, image_width, image_height, used_label_rects)
         used_label_rects.append(label_rect)
         lx1, ly1, lx2, ly2 = label_rect
+        if label_rect != default_label_rect:
+            box_point, label_point = closest_points_between_rectangles((x1, y1, x2, y2), label_rect)
+            cv2.line(annotated, box_point, label_point, color, 1, cv2.LINE_AA)
         cv2.rectangle(annotated, (lx1, ly1), (lx2, ly2), color, -1)
         text_y = min(ly2 - baseline - 3, max(ly1 + text_height + 2, ly1 + text_height))
         cv2.putText(annotated, label, (lx1 + 4, text_y), font, label_font_scale, text_color, thickness, cv2.LINE_AA)

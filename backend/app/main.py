@@ -1388,7 +1388,7 @@ def admin_list_realtime_sessions(_admin: User = Depends(admin_user), db: DbSessi
 
 
 @app.delete("/admin/analyses/{analysis_id}", status_code=204)
-def admin_delete_analysis(analysis_id: int, reason: str = Query(min_length=2, max_length=500), _admin: User = Depends(admin_user), db: DbSession = Depends(get_db)) -> Response:
+def admin_delete_analysis(analysis_id: int, reason: str = Query(default="관리자 분석 기록 삭제", min_length=2, max_length=500), _admin: User = Depends(admin_user), db: DbSession = Depends(get_db)) -> Response:
     item = db.get(Analysis, analysis_id)
     if not item:
         raise HTTPException(404, "분석 기록을 찾을 수 없습니다.")
