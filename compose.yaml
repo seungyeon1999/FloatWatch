@@ -2,6 +2,8 @@ services:
   backend:
     build:
       context: ./backend
+      args:
+        PYTORCH_INDEX_URL: ${PYTORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}
     restart: unless-stopped
     env_file:
       - path: ./.env
@@ -11,10 +13,11 @@ services:
     environment:
       DATABASE_URL: sqlite:////app/data/app.db
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3001}
-      INFERENCE_DEVICE: ${INFERENCE_DEVICE:-cpu}
+      INFERENCE_DEVICE: ${INFERENCE_DEVICE:-cuda:0}
       ANALYSIS_WORKERS: ${ANALYSIS_WORKERS:-4}
 
       MAX_MEDIA_PIXELS: ${MAX_MEDIA_PIXELS:-48000000}
+    gpus: all
     volumes:
       - backend-data:/app/data
       - backend-storage:/app/storage

@@ -59,6 +59,13 @@ TRACKING_MAX_FEATURES_PER_BOX = 24
 INFERENCE_DEVICE = os.getenv("INFERENCE_DEVICE", "cpu").strip().lower() or "cpu"
 if INFERENCE_DEVICE != "cpu" and not re.fullmatch(r"cuda(?::\d+)?", INFERENCE_DEVICE):
     raise RuntimeError("INFERENCE_DEVICE must be 'cpu', 'cuda', or 'cuda:<index>'")
+if INFERENCE_DEVICE.startswith("cuda"):
+    try:
+        import torch
+    except Exception as exc:
+        raise RuntimeError("GPU inference requested but torch is unavailable") from exc
+    if not torch.cuda.is_available():
+        raise RuntimeError("GPU inference requested but CUDA is unavailable")
 logger = logging.getLogger("floatwatch.analysis")
 ANALYSIS_ERROR_MESSAGES = {
     "MODEL_LOAD_FAILED": "AI 모델을 불러오지 못했습니다.",

@@ -117,19 +117,15 @@ const defaultRounds: ExperimentRound[] = [
       {
         model: 'YOLOv8s',
         chart: '/presentation/ai-report-round4/yolov8s_results.png',
-        photos: [
-          { src: '/presentation/ai-report-round4/yolov8s-example-inference-01.jpg', label: '추론 01' },
-          { src: '/presentation/ai-report-round4/yolov8s-example-inference-02.jpg', label: '추론 02' },
-        ],
+        photo:
+          '/presentation/ai-report-round4/yolov8s-example-inference-01.jpg',
         matrix: '/presentation/ai-report-round4/yolov8s-confusion.png',
       },
       {
         model: 'YOLO11s',
         chart: '/presentation/ai-report-round4/yolo11s_results.png',
-        photos: [
-          { src: '/presentation/ai-report-round4/yolo11s-example-inference-01.jpg', label: '추론 01' },
-          { src: '/presentation/ai-report-round4/yolo11s-example-inference-02.jpg', label: '추론 02' },
-        ],
+        photo:
+          '/presentation/ai-report-round4/yolo11s-example-inference-01.jpg',
         matrix: '/presentation/ai-report-round4/yolov11s-confusion.png',
       },
     ],
