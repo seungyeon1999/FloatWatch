@@ -202,7 +202,7 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
           <div style={{ display: 'flex', flexDirection: 'column', padding: '22px 29px 12px', boxSizing: 'border-box', background: selectedRound.next ? '#eaf3f2' : '#263f50', color: '#fff' }}>
             <small style={{ color: selectedRound.next ? '#397773' : '#ff9a74', fontSize: 12, fontWeight: 950, letterSpacing: 1.1 }}>{selectedRound.label} · {selectedRound.next ? 'NEXT EXPERIMENT' : 'SELECTED EXPERIMENT'}</small>
             <div style={{ height: 1, margin: '13px 0 5px', background: selectedRound.next ? '#bfd4d1' : 'rgba(255,255,255,.18)' }} />
-            <div style={{ display: 'grid', gridTemplateRows: 'repeat(3,minmax(0,1fr))', flex: 1, minHeight: 0, marginTop: 5, overflow: 'hidden', borderTop: `1px solid ${selectedRound.next ? '#bfd4d1' : 'rgba(255,255,255,.14)'}` }}>
+            <div style={{ display: 'grid', gridTemplateRows: '86px 104px minmax(0,1fr)', flex: 1, minHeight: 0, marginTop: 5, overflow: 'hidden', borderTop: `1px solid ${selectedRound.next ? '#bfd4d1' : 'rgba(255,255,255,.14)'}` }}>
               {[
                 ['01', 'CLASS', '클래스 구성', selectedRound.dataset, '#91bbc3'],
                 ['02', 'PARAMETERS', '하이퍼파라미터', selectedRound.params, '#65c4c5'],
