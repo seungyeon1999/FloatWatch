@@ -207,9 +207,9 @@ export function AiTrainingJourneySlide({ rounds, chapter, title, subtitle, pageN
                 ['01', 'CLASS', '클래스 구성', selectedRound.dataset, '#91bbc3'],
                 ['02', 'PARAMETERS', '하이퍼파라미터', selectedRound.params, '#65c4c5'],
                 ['03', 'AUGMENTATION', '데이터 증강', selectedRound.augment, '#ff9a74'],
-              ].map(([no,en,title,text,accent], index) => <div key={no} style={{ display: 'grid', gridTemplateColumns: '105px minmax(0,1fr)', gap: 15, alignItems: 'center', minHeight: 0, padding: '8px 0', boxSizing: 'border-box', borderBottom: index === 2 ? 'none' : `1px solid ${selectedRound.next ? '#bfd4d1' : 'rgba(255,255,255,.14)'}` }}>
+              ].map(([no,en,title,text,accent], index) => <div key={no} style={{ display: 'grid', gridTemplateColumns: '105px minmax(0,1fr)', gap: 15, alignItems: 'center', minHeight: 0, padding: '10px 0', boxSizing: 'border-box', borderBottom: index === 2 ? 'none' : `1px solid ${selectedRound.next ? '#bfd4d1' : 'rgba(255,255,255,.14)'}` }}>
                 <div style={{ alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingLeft: 11, borderLeft: `3px solid ${accent}` }}><small style={{ color: selectedRound.next && index !== 2 ? '#397773' : accent, fontSize: 9, fontWeight: 950, letterSpacing: .9 }}>{no} · {en}</small><strong style={{ display: 'block', marginTop: 5, color: selectedRound.next ? '#173b3a' : '#fff', fontSize: 14.5, lineHeight: 1.2 }}>{title}</strong></div>
-                <span style={{ display: 'block', minWidth: 0, whiteSpace: 'pre-line', color: selectedRound.next ? '#355856' : '#edf4f5', fontSize: 13, fontWeight: 780, lineHeight: 1.36 }}>{text}</span>
+                <span style={{ display: 'block', minWidth: 0, whiteSpace: 'pre-line', overflowWrap: 'anywhere', color: selectedRound.next ? '#355856' : '#edf4f5', fontSize: 13, fontWeight: 780, lineHeight: 1.45 }}>{text}</span>
               </div>)}
             </div>
           </div>
